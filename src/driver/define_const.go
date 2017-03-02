@@ -39,3 +39,17 @@ type External_order struct {
 	Up int
 	Down int
 }
+
+/*
+type MsgType int
+const (
+    MSG_NEW_ORDER = iota
+    MSG_ORDER_DONE
+    MSG_ORDER_ACK
+)
+
+type NetworkMessage struct {
+    type_of_message  MsgType
+    state            Elevator_states
+}
+*/

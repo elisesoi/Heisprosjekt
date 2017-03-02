@@ -1,29 +1,20 @@
 package main
 
 import (
-    "fmt"
+    //"fmt"
     ."../driver"
-    "../Network/network/localip"
-    "../Network"
+    //"../Network/network/localip"
+    //"../Network"
     //"time"
+    "../elevator"
 )
-
-type MsgType int
-const (
-    MSG_NEW_ORDER = iota
-    MSG_ORDER_DONE
-    MSG_ORDER_ACK
-)
-
-type NetworkMessage struct {
-    type_of_message  MsgType
-    state            Elevator_states
-}
-
 
 
 
 func main() {
+    Initialize_elevator()
+    Elevator_loop()
+    /*
     Driver_init()
 
     fmt.Println("Press STOP button to stop elevator and exit program.\n")
@@ -69,6 +60,8 @@ func main() {
         //test for state_matrix
 
     }
+    */
+
 }
 
 

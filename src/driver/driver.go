@@ -10,8 +10,6 @@ import (
 		//"defines"
 		)
 
-//define MOTOR_SPEED 2800
-
 var lamp_channel_matrix  = [N_FLOORS][N_BUTTONS] int{
 		{LIGHT_UP1, LIGHT_DOWN1, LIGHT_COMMAND1},
     	{LIGHT_UP2, LIGHT_DOWN2, LIGHT_COMMAND2},
@@ -43,7 +41,6 @@ func Driver_init() error{
 	Driver_set_stop_lamp(0)
 	Driver_set_door_open_lamp(0)
 	Driver_set_floor_indicator(0)
-	//Spør de andre etter oppdateringer
     return nil
 }
 

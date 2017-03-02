@@ -6,7 +6,7 @@ import (
 	"./network/peers"
 	"flag"
 	"fmt"
-	//"os"
+	"os"
 )
 
 // We define some custom struct to send over the network.
@@ -34,14 +34,9 @@ func Network(sender_ch, recv_ch chan string) {
 			fmt.Println(err)
 			localIP = "DISCONNECTED"
 		}
-		//id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
+		id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
 	}
-	var id_list[] int
-	for id := range peers.PeerUpdate {
-		id_list.append(id.Peers[12:15])
-		fmt.Println(id_list)
-	}
-
+	
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
 	peerUpdateCh := make(chan peers.PeerUpdate)
