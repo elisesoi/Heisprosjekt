@@ -1,8 +1,8 @@
 package orders
 
 import (
-	"fmt"
-	//"timer"
+//"fmt"
+//"timer"
 )
 
 /*
@@ -45,7 +45,7 @@ func order(){
 	        case update := <-peerUpdateCh:
 	            // add to matrix
 	            // new_key = update.New[12:15]
-	            state_matrix[new_key] = 
+	            state_matrix[new_key] =
 	        case <-timer:
 	            sender_ch <- "This is my message!"
 	        }
@@ -53,7 +53,7 @@ func order(){
 	}
 
 
-func calculate_cost(state elevator_states) int{ //må ta inn argument; statematrix og 
+func calculate_cost(state elevator_states) int{ //må ta inn argument; statematrix og
 	cost := 0
 	if state.Alive == 0{
 		cost = 1000
@@ -72,7 +72,7 @@ func choose_elevator(){
 	min_cost := 100
 	for id, v := range state_matrix{
 		cost := calculate_cost(v)
-		if cost < min_cost { 
+		if cost < min_cost {
 			cost = min_cost
 			who_takes_order = id
 		}
@@ -85,14 +85,14 @@ func choose_elevator(){
 	//}
 }
 */
-func Should_stop(){
-	fmt.Println("should stop?")
+func Should_stop() {
+	//fmt.Println("should stop?")
 }
 
-func choose_direction(){
+func choose_direction() {
 
 }
 
-func delete_orders(){
+func delete_orders() {
 
 }
