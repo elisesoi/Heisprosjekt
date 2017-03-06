@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var ip, _ = LocalIP()
+var id = ip[12:15]
 
 func Initialize_elevator() {
 	Driver_init()
@@ -54,8 +56,11 @@ func Initialize_elevator() {
 
 func Elevator_loop() {
 	for {
+		//oppdaterer state_matrix
+		State_matrix[id] = Elevator_states{Current_floor: Driver_get_floor_sensor_signal()}
+
 		Driver_set_floor_indicator(Driver_get_floor_sensor_signal())
-		//Order()
+		Order()
 
 		// Change direction when we reach top/bottom floor
 		if Driver_get_floor_sensor_signal() == N_FLOORS-1 {
@@ -67,12 +72,19 @@ func Elevator_loop() {
 		// Stop elevator and exit program if the stop button is pressed
 		if Driver_get_stop_signal() != 0 {
 			Driver_set_motor_direction(DIRN_STOP)
-			//fmt.Println(Internal_orders)
+			fmt.Println(Internal_orders)
 			break
 		}
 
 		if Driver_get_floor_sensor_signal() == 1 {
-			Should_stop()
+			if Should_stop() == true{
+				Driver_set_motor_direction(DIRN_STOP)
+				open_door()
+				//send beskjed til de andre om hvilken ordre som er ferdig. Må ikke vente på svar. 
+				Delete_orders()
+				//choose_direction()
+				Driver_set_motor_direction(DIRN_UP)
+			}
 			//send oppdatering til statematrix og til de andre at heis har ny current_state
 		}
 	}
@@ -80,13 +92,13 @@ func Elevator_loop() {
 
 func open_door() {
 	Driver_set_door_open_lamp(1)
-	//State_matrix[id] = Elevator_states{_, _, _, _, _, _, _, 1}
+	State_matrix[id] = Elevator_states{Door_open: 1}
 	//fmt.Println(State_matrix)
 	//gi beskjed til de andre
 
 	time.Sleep(3 * time.Second)
 	Driver_set_door_open_lamp(0)
-	//State_matrix[id][8] = 0
+	State_matrix[id] = Elevator_states{Door_open: 0}
 	//fmt.Println(State_matrix)
 	// gi beskjed til de andre
 }

@@ -7,15 +7,15 @@ import (
 	. "../Network/network/localip"
 )
 
-
+var ip, _ = LocalIP()
+var id = ip[12:15]
 
 func Order(){
-	ip, _ := LocalIP()
-	id := ip[12:15]
 	for i:=0; i<N_FLOORS; i++{
 		if Driver_get_button_signal(BUTTON_COMMAND, i) == 1{
 			Driver_set_button_lamp(BUTTON_COMMAND, i, 1)
 			Internal_orders[id][i] = 1
+			State_matrix[id] = Elevator_states{Floor_1: 1}
 		} 
 	}
 }
@@ -100,14 +100,22 @@ func choose_elevator(){
 	//}
 }
 */
-func Should_stop() {
+func Should_stop() bool{
+	floor := State_matrix[id].Current_floor
+	//dir := State_matrix[id].Current_direction
 	//fmt.Println("should stop?")
+	if Internal_orders[id][floor] == 1{
+		return true
+	}
+	return false
 }
 
 func choose_direction() {
 
 }
 
-func delete_orders() {
-
+func Delete_orders() {
+	floor := State_matrix[id].Current_floor
+	Internal_orders[id][floor+1] = 0
+	//State_matrix[id] = Elevator_states{Floor_1: 1} MÅ FÅ TIL LISTE TIL FLOOR!!!
 }

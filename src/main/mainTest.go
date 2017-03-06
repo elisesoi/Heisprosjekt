@@ -7,7 +7,7 @@ import (
 	//"../Network"
 	//"time"
 	. "../elevator"
-	."../orders"
+	//."../orders"
 )
 
 func main() {
@@ -18,8 +18,7 @@ func main() {
 			need_to_initialize = 0
 			Initialize_elevator()
 		}
-		go Elevator_loop()
-		go Order()
+		Elevator_loop()
 	}
 	/*
 	   Driver_init()
