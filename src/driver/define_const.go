@@ -27,10 +27,10 @@ const (
 
 type Elevator_states struct {
 	//Floors []int
-	Floor_1           int
-	Floor_2           int
-	Floor_3           int
-	Floor_4           int
+	Floor_1           Driver_button_type
+	Floor_2           Driver_button_type
+	Floor_3           Driver_button_type
+	Floor_4           Driver_button_type
 	Current_direction Driver_motor_dir
 	Current_floor     int
 	Alive             int
@@ -41,6 +41,12 @@ type External_order struct {
 	Up   int
 	Down int
 }
+
+//deklaring
+var State_matrix = make(map[string]Elevator_states)
+var Internal_orders = make(map[string][]int)
+var External_orders[N_FLOORS][2]int
+
 
 /*
 type MsgType int

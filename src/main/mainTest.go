@@ -2,22 +2,24 @@ package main
 
 import (
 	//"fmt"
-	. "../driver"
+	//. "../driver"
 	//"../Network/network/localip"
 	//"../Network"
 	//"time"
 	. "../elevator"
+	."../orders"
 )
 
 func main() {
-	var v int = 0
-	for {
-		if v == 0 {
-			v = 1
-			Initialize_elevator()
+	var need_to_initialize int = 1
 
+	for {
+		if need_to_initialize == 1 {
+			need_to_initialize = 0
+			Initialize_elevator()
 		}
-		Elevator_loop()
+		go Elevator_loop()
+		go Order()
 	}
 	/*
 	   Driver_init()
@@ -68,17 +70,3 @@ func main() {
 	*/
 
 }
-
-// vil ha en ordrematrise, som inneholder ordrene.
-
-var orders = [N_FLOORS][2]int{ //verdier i denne settes når en knapp trykkes. Sett først et random nr. feks 9, og endre til 1 når en er sikker på at de andre har fått bestillingen de også. Når bestilling slettes settes 0 i ruten som passer.
-	{0, 0},
-	{0, 0},
-	{0, 0},
-	{0, 0},
-}
-
-//var orders map[int]updown_order
-
-//order map som tar seg av indre ordre
-var internal_order map[string]int

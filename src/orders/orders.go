@@ -1,9 +1,24 @@
 package orders
 
 import (
-//"fmt"
-//"timer"
+	//"fmt"
+	//"timer"
+	."../driver"
+	. "../Network/network/localip"
 )
+
+
+
+func Order(){
+	ip, _ := LocalIP()
+	id := ip[12:15]
+	for i:=0; i<N_FLOORS; i++{
+		if Driver_get_button_signal(BUTTON_COMMAND, i) == 1{
+			Driver_set_button_lamp(BUTTON_COMMAND, i, 1)
+			Internal_orders[id][i] = 1
+		} 
+	}
+}
 
 /*
 func order(sender_ch, recv_ch chan string) { //skal denne sende over Elevator_states? og ikke string?
