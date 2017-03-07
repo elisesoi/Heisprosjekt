@@ -17,12 +17,7 @@ func Initialize_elevator() {
 	fmt.Println("Press STOP button to stop elevator and exit program.\n")
 	Driver_set_motor_direction(DIRN_STOP)
 
-	//dette er nok noe network bør ta seg av, og sende på kanal til denne modulen
-	ip, _ := LocalIP()
-	id := ip[12:15]
-	//skal denne være global, utenfor funksjonen??
-	//State_matrix := make(map[string]Elevator_states)
-	State_matrix[id] = Elevator_states{-1, -1, -1, -1, DIRN_STOP, Driver_get_floor_sensor_signal(), 1, 0}
+	State_matrix[id] = Elevator_states{Floors: []int{-1,-1,-1,-1}, Current_direction: DIRN_STOP, Current_floor: Driver_get_floor_sensor_signal(), Alive: 1, Door_open: 0}
 	
 	for floor:=0; floor<N_FLOORS; floor++{
 		for button_type:=0; button_type < 2; button_type++{
@@ -57,27 +52,30 @@ func Initialize_elevator() {
 func Elevator_loop() {
 	for {
 		//oppdaterer state_matrix
-		State_matrix[id] = Elevator_states{Current_floor: Driver_get_floor_sensor_signal()}
+		//State_matrix[id] = Elevator_states{Current_floor: Driver_get_floor_sensor_signal() }
 
 		Driver_set_floor_indicator(Driver_get_floor_sensor_signal())
-		Order()
+		Order_default()
 
 		// Change direction when we reach top/bottom floor
 		if Driver_get_floor_sensor_signal() == N_FLOORS-1 {
 			Driver_set_motor_direction(DIRN_DOWN)
+			//lift.Current_direction = DIRN_DOWN
 		} else if Driver_get_floor_sensor_signal() == 0 {
 			Driver_set_motor_direction(DIRN_UP)
+			//lift.Current_direction = DIRN_UP
 		}
 
 		// Stop elevator and exit program if the stop button is pressed
 		if Driver_get_stop_signal() != 0 {
 			Driver_set_motor_direction(DIRN_STOP)
-			fmt.Println(Internal_orders)
+			fmt.Println("Dette er ny state matrix:",State_matrix)
 			break
 		}
-
-		if Driver_get_floor_sensor_signal() == 1 {
-			if Should_stop() == true{
+		fl := Driver_get_floor_sensor_signal()
+		if fl == 0 || fl == 1 || fl == 2 || fl == 3 {
+			/*
+			if Should_stop() == true {
 				Driver_set_motor_direction(DIRN_STOP)
 				open_door()
 				//send beskjed til de andre om hvilken ordre som er ferdig. Må ikke vente på svar. 
@@ -85,20 +83,24 @@ func Elevator_loop() {
 				//choose_direction()
 				Driver_set_motor_direction(DIRN_UP)
 			}
+			*/
 			//send oppdatering til statematrix og til de andre at heis har ny current_state
+			//fmt.Println(State_matrix)
 		}
+
 	}
 }
 
 func open_door() {
+	//lift := State_matrix[id]
 	Driver_set_door_open_lamp(1)
-	State_matrix[id] = Elevator_states{Door_open: 1}
-	//fmt.Println(State_matrix)
+	//lift.Door_open = 1
+	fmt.Println(State_matrix)
 	//gi beskjed til de andre
 
 	time.Sleep(3 * time.Second)
 	Driver_set_door_open_lamp(0)
-	State_matrix[id] = Elevator_states{Door_open: 0}
+	//lift.Door_open = 0
 	//fmt.Println(State_matrix)
 	// gi beskjed til de andre
 }

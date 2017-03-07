@@ -25,7 +25,8 @@ const (
 )
 
 type Elevator_states struct {
-	Floors []int
+	//Floors []int
+	Floor_1 int 
 	Current_direction Driver_motor_dir
 	Current_floor     int
 	Alive             int

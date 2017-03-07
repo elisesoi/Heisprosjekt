@@ -10,18 +10,18 @@ import (
 var ip, _ = LocalIP()
 var id = ip[12:15]
 
-func Order(){
+func Order_default(){
 	for i:=0; i<N_FLOORS; i++{
 		if Driver_get_button_signal(BUTTON_COMMAND, i) == 1{
 			Driver_set_button_lamp(BUTTON_COMMAND, i, 1)
 			Internal_orders[id][i] = 1
-			State_matrix[id] = Elevator_states{Floor_1: 1}
+			//State_matrix[id].Floors[i] = 1 //går ikke fordi Floors[] er tom...
 		} 
 	}
 }
 
 /*
-func order(sender_ch, recv_ch chan string) { //skal denne sende over Elevator_states? og ikke string?
+func Order(sender_ch, recv_ch chan string) { //skal denne sende over Elevator_states? og ikke string?
     timer := time.NewTicker(time.Second).C
     var state_matrix map[string]Elevator_states //skal key være int? feks 3 siste element i ip-adresse?
     for {
@@ -100,22 +100,34 @@ func choose_elevator(){
 	//}
 }
 */
+
+/*
 func Should_stop() bool{
-	floor := State_matrix[id].Current_floor
-	//dir := State_matrix[id].Current_direction
+	current_floor := State_matrix[id].Current_floor
+	current_dir := State_matrix[id].Current_direction
 	//fmt.Println("should stop?")
-	if Internal_orders[id][floor] == 1{
-		return true
+
+	//må sjekke om det er 1-tall i gjeldende etasje i state-matrix. Er det det må internal_orders sjekkes, er det en internal må
+	// heisen stoppe. Er det ikke internal må external_order sjekkes. Er current_direction samme vei som bestillingen skal heisen stoppe
+	// husk at når heisen stopper i en etg hopper alle på, så da slettes alle ordre i den etg til respektive heis (skjer i delete_orders())
+	if State_matrix[id].Floors[current_floor] == 1 {
+		if Internal_orders[id][current_floor] == 1 {
+			return true
+		} else if current_dir == 1 {//&& (External_order[current_floor][1] == 1) {
+			return true
+		} else if current_dir == -1 { //&& (External_order[current_floor][0] == 1) {
+			return true
+		}
 	}
 	return false
-}
+}*/
 
 func choose_direction() {
-
+	//Lik som i 1.klasse?
 }
 
 func Delete_orders() {
 	floor := State_matrix[id].Current_floor
-	Internal_orders[id][floor+1] = 0
+	Internal_orders[id][floor] = 0
 	//State_matrix[id] = Elevator_states{Floor_1: 1} MÅ FÅ TIL LISTE TIL FLOOR!!!
 }
