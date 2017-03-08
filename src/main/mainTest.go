@@ -1,35 +1,35 @@
 package main
 
 import (
-	"fmt"
 	. "../driver"
+	"fmt"
 	//"../Network/network/localip"
-	."../Network"
+	. "../Network"
 	//"time"
 	. "../elevator"
-	."../orders"
+	. "../orders"
 )
-
 
 func main() {
 	sender_ch := make(chan string)
 	recv_ch := make(chan string)
 	floor_reached_ch := make(chan int)
+	new_floor_ch := make(chan int)
 	order_new_state_ch := make(chan int)
 	new_dir_state_ch := make(chan Driver_motor_dir)
 	delete_order_ch := make(chan int)
-	new_order_ch := make(chan Driver_button_type)
+	new_order_ch := make(chan New_order)
 
 	fmt.Println("Har laget kanaler i main")
 	localid := ""
 
 	go Network(localid, sender_ch, recv_ch)
-	local_id := <- recv_ch
+	local_id := <-recv_ch
 	fmt.Println(local_id)
 
 	Initialize_elevator(local_id)
-	go Order(order_new_state_ch, new_dir_state_ch, new_order_ch, local_id)
-	go Elevator_loop(floor_reached_ch, order_new_state_ch, new_dir_state_ch)
+	go Order(new_floor_ch, delete_order_ch, new_dir_state_ch, new_order_ch, local_id)
+	go Elevator_loop(floor_reached_ch, order_new_state_ch, new_floor_ch, delete_order_ch, new_dir_state_ch, new_order_ch)
 	select {}
 
 	/*

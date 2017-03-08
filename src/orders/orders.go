@@ -3,10 +3,9 @@ package orders
 import (
 	//"fmt"
 	//"timer"
-	."../driver"
+	. "../driver"
 	//. "../Network/network/localip"
 )
-
 
 /*
 func Order_default(){
@@ -15,55 +14,58 @@ func Order_default(){
 			Driver_set_button_lamp(BUTTON_COMMAND, i, 1)
 			Internal_orders[id][i] = 1
 			//State_matrix[id].Floors[i] = 1 //går ikke fordi Floors[] er tom...
-		} 
+		}
 	}
 }
 */
 
-func Order(new_floor_ch, delete_order_ch chan int, new_dir_state_ch chan Driver_motor_dir,new_order_ch chan Driver_button_type, id string){
+func Order(new_floor_ch, delete_order_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch chan New_order, id string) {
 	for {
-		select{
-			case floor := <- new_floor_ch:
-				state := State_matrix[id]
-				state.Current_floor = floor
-				State_matrix[id] = state
-				//Bør si i fra til de andre hvilken etg han er i
-				//
-			case dir := <- new_dir_state_ch:
-				state := State_matrix[id]
-				state.Current_direction = dir
-				State_matrix[id] = state
+		select {
+		case arriving_floor := <-new_floor_ch:
+			state := State_matrix[id]
+			state.Current_floor = arriving_floor
+			State_matrix[id] = state
+			//Bør si i fra til de andre hvilken etg han er i
+			//
+		case dir := <-new_dir_state_ch:
+			state := State_matrix[id]
+			state.Current_direction = dir
+			State_matrix[id] = state
 
-			case delete_order := <- delete_order_ch:
-				state := State_matrix[id]
-				state.Floors[delete_order] = 0
-				State_matrix[id] = state
-				//oppdater orders og evt internal orders
+		case delete_order := <-delete_order_ch:
+			state := State_matrix[id]
+			state.Floors[delete_order] = 0
+			State_matrix[id] = state
+			//oppdater orders og evt internal orders
+			/*
 				internal := Internal_orders[id]
 				internal[id][delete_order] = 0
 				Internal_orders[id] = internal
 
-				External_orders[delete_order][0] = 0
-				External_orders[delete_order][1] = 0
-				//bcast til de andre
+						External_orders[delete_order][0] = 0
+						External_orders[delete_order][1] = 0
+						//bcast til de andre
 
-			case new_order := <- new_order_ch:
-				if new_order.button == BUTTON_COMMAND{
-					//bcast til de andre
-					//må få svar før det legges i state_m
-					state := state_matrix[id]
-					state.Floors[new_order.floor] = 1
-					State_matrix[id] = state
-					Internal_orders[id][new_order.floor] = 1
+					case new_order := <-new_order_ch:
+						if new_order.button == BUTTON_COMMAND {
+							//bcast til de andre
+							//må få svar før det legges i state_m
+							state := state_matrix[id]
+							state.Floors[new_order.floor] = 1
+							State_matrix[id] = state
+							Internal_orders[id][new_order.floor] = 1
 
-				} else {
-					//if de andre har svart at de har mottatt bestilling
+						} else {
+							//if de andre har svart at de har mottatt bestilling
 
-					state := State_matrix[id]
-					state.Floors[new_order.floor] = 1
-					State_matrix[id] = state
-				}
-			
+							state := State_matrix[id]
+							state.Floors[new_order.floor] = 1
+							State_matrix[id] = state
+						}
+					case peer_update := <- peerUpdateCh:
+						if  peer_update.Lost har verdi
+			*/
 		}
 	}
 }
@@ -168,10 +170,10 @@ func Should_stop() bool{
 	return false
 }*/
 
-func Should_stop(current_floor int) bool{
-	if current_floor != -1{
+func Should_stop(current_floor int) bool {
+	if current_floor != -1 {
 		return true
-	}else{
+	} else {
 		return false
 	}
 }
@@ -180,22 +182,9 @@ func choose_direction() {
 	//Lik som i 1.klasse?
 }
 
-
 func Delete_orders(current_floor int, delete_order_ch chan int) {
 	delete_order_ch <- current_floor
 	Driver_set_button_lamp(BUTTON_CALL_UP, current_floor, 0)
 	Driver_set_button_lamp(BUTTON_CALL_DOWN, current_floor, 0)
 	Driver_set_button_lamp(BUTTON_COMMAND, current_floor, 0)
 }
-
-
-
-
-
-
-
-
-
-
-
-
