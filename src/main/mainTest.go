@@ -1,25 +1,36 @@
 package main
 
 import (
-	//"fmt"
-	//. "../driver"
+	"fmt"
+	. "../driver"
 	//"../Network/network/localip"
-	//"../Network"
+	."../Network"
 	//"time"
 	. "../elevator"
-	//."../orders"
+	."../orders"
 )
 
-func main() {
-	var need_to_initialize int = 1
 
-	for {
-		if need_to_initialize == 1 {
-			need_to_initialize = 0
-			Initialize_elevator()
-		}
-		Elevator_loop()
-	}
+func main() {
+	sender_ch := make(chan string)
+	recv_ch := make(chan string)
+	floor_reached_ch := make(chan int)
+	order_new_state_ch := make(chan int)
+	new_dir_state_ch := make(chan Driver_motor_dir)
+
+	fmt.Println("Har laget kanaler i main")
+	localid := ""
+
+	go Network(localid, sender_ch, recv_ch)
+	local_id := <- recv_ch
+	fmt.Println(local_id)
+
+	Initialize_elevator(local_id)
+	go Order(order_new_state_ch, new_dir_state_ch, local_id)
+	go Elevator_loop(floor_reached_ch, order_new_state_ch, new_dir_state_ch)
+
+	select {}
+
 	/*
 	   Driver_init()
 

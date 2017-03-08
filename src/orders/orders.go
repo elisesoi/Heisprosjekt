@@ -4,12 +4,11 @@ import (
 	//"fmt"
 	//"timer"
 	."../driver"
-	. "../Network/network/localip"
+	//. "../Network/network/localip"
 )
 
-var ip, _ = LocalIP()
-var id = ip[12:15]
 
+/*
 func Order_default(){
 	for i:=0; i<N_FLOORS; i++{
 		if Driver_get_button_signal(BUTTON_COMMAND, i) == 1{
@@ -17,6 +16,24 @@ func Order_default(){
 			Internal_orders[id][i] = 1
 			//State_matrix[id].Floors[i] = 1 //går ikke fordi Floors[] er tom...
 		} 
+	}
+}
+*/
+
+func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, id string){
+	for {
+		select{
+			case floor := <- order_new_state_ch:
+				state := State_matrix[id]
+				state.Current_floor = floor
+				State_matrix[id] = state
+				//Bør si i fra til de andre hvilken etg han er i
+				//
+			case dir := <- new_dir_state_ch:
+				state := State_matrix[id]
+				state.Current_direction = dir
+				State_matrix[id] = state
+		}
 	}
 }
 
@@ -103,8 +120,6 @@ func choose_elevator(){
 
 /*
 func Should_stop() bool{
-	current_floor := State_matrix[id].Current_floor
-	current_dir := State_matrix[id].Current_direction
 	//fmt.Println("should stop?")
 
 	//må sjekke om det er 1-tall i gjeldende etasje i state-matrix. Er det det må internal_orders sjekkes, er det en internal må
@@ -122,12 +137,21 @@ func Should_stop() bool{
 	return false
 }*/
 
+func Should_stop(current_floor int) bool{
+	if current_floor != -1{
+		return true
+	}else{
+		return false
+	}
+}
+
 func choose_direction() {
 	//Lik som i 1.klasse?
 }
 
+/*
 func Delete_orders() {
 	floor := State_matrix[id].Current_floor
 	Internal_orders[id][floor] = 0
 	//State_matrix[id] = Elevator_states{Floor_1: 1} MÅ FÅ TIL LISTE TIL FLOOR!!!
-}
+}*/
