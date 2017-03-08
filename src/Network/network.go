@@ -18,23 +18,25 @@ type HelloMsg struct {
 	//her vil vi sende over en et element i matrisen eller hele matrisen
 }
 
-func Network(sender_ch, recv_ch chan string) {
-	// Our id can be anything. Here we pass it on the command line, using
-	//  `go run main.go -id=our_id`
-	var id string
-	flag.StringVar(&id, "id", "", "id of this peer")
-	flag.Parse()
+func GetLocalId() string {
+	localIP, err := localip.LocalIP()
+	if err != nil {
+		return "hva du vil"
+	}
+	return localIP[12:15]
+}
 
+func Network(local_id string, sender_ch, recv_ch chan string) {
 	// ... or alternatively, we can use the local IP address.
 	// (But since we can run multiple programs on the same PC, we also append the
 	//  process ID)
-	if id == "" {
+	if local_id == "" {
 		localIP, err := localip.LocalIP()
 		if err != nil {
 			fmt.Println(err)
 			localIP = "DISCONNECTED"
 		}
-		id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
+		local_id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
 	}
 	
 	// We make a channel for receiving updates on the id's of the peers that are
