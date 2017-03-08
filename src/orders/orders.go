@@ -20,7 +20,7 @@ func Order_default(){
 }
 */
 
-func Order(new_floor_ch chan int, new_dir_state_ch chan Driver_motor_dir,new_order_ch chan Driver_button_type, id string){
+func Order(new_floor_ch, delete_order_ch chan int, new_dir_state_ch chan Driver_motor_dir,new_order_ch chan Driver_button_type, id string){
 	for {
 		select{
 			case floor := <- new_floor_ch:
