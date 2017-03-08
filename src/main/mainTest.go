@@ -28,9 +28,8 @@ func main() {
 	fmt.Println(local_id)
 
 	Initialize_elevator(local_id)
-	go Order(order_new_state_ch, new_dir_state_ch, local_id)
+	go Order(order_new_state_ch, new_dir_state_ch, new_order_ch, local_id)
 	go Elevator_loop(floor_reached_ch, order_new_state_ch, new_dir_state_ch)
-
 	select {}
 
 	/*

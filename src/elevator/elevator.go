@@ -99,12 +99,13 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 		select {
 		case floor := <-floor_reached_ch: // this file
 			state.Current_floor = floor
-			order_new_state_ch <- floor
+			new_floor_ch <- floor
 			floor_reached(floor, new_dir_state_ch)
 		}
 	
 		case new_order := <-new_order_ch:
 			//her må vi sikkert ha noe mer..
+			//choose_elevator() + bcast til de andre
 		/*
 		case new_destination := <-destination_ch: // from Order()
 			// ...
@@ -152,6 +153,7 @@ func check_buttons(new_order_ch chan New_order){
 				new_order_ch <- new_order
 			}
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 

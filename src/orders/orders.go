@@ -20,10 +20,10 @@ func Order_default(){
 }
 */
 
-func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, id string){
+func Order(new_floor_ch chan int, new_dir_state_ch chan Driver_motor_dir,new_order_ch chan Driver_button_type, id string){
 	for {
 		select{
-			case floor := <- order_new_state_ch:
+			case floor := <- new_floor_ch:
 				state := State_matrix[id]
 				state.Current_floor = floor
 				State_matrix[id] = state
