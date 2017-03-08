@@ -10,14 +10,15 @@ const N_ELEVATORS int = 3
 const MOTOR_SPEED = 2800
 
 type Driver_button_type int
+
 const (
 	BUTTON_CALL_UP   = 0
 	BUTTON_CALL_DOWN = 1
 	BUTTON_COMMAND   = 2
-	NO_BUTTON_PUSHED = -1
 )
 
 type Driver_motor_dir int
+
 const (
 	DIRN_DOWN = -1
 	DIRN_STOP = 0
@@ -25,7 +26,7 @@ const (
 )
 
 type Elevator_states struct {
-	Floors []int
+	Floors            []int
 	Current_direction Driver_motor_dir
 	Current_floor     int
 	Alive             int
@@ -40,8 +41,12 @@ type External_order struct {
 //deklaring
 var State_matrix = make(map[string]Elevator_states)
 var Internal_orders = make(map[string][]int)
-var External_orders[N_FLOORS][2]int
+var External_orders [N_FLOORS][2]int
 
+type Order_type struct {
+	Floor  int
+	Button Driver_button_type
+}
 
 /*
 type MsgType int

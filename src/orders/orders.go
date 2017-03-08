@@ -1,12 +1,12 @@
 package orders
 
 import (
-	//"fmt"
+	"fmt"
 	//"timer"
-	."../driver"
+	. "../Network"
+	. "../driver"
 	//. "../Network/network/localip"
 )
-
 
 /*
 func Order_default(){
@@ -15,24 +15,33 @@ func Order_default(){
 			Driver_set_button_lamp(BUTTON_COMMAND, i, 1)
 			Internal_orders[id][i] = 1
 			//State_matrix[id].Floors[i] = 1 //går ikke fordi Floors[] er tom...
-		} 
+		}
 	}
 }
 */
 
-func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, id string){
+func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch chan Order_type, id string) {
 	for {
-		select{
-			case floor := <- order_new_state_ch:
+		select {
+		case floor := <-order_new_state_ch:
+			state := State_matrix[id]
+			state.Current_floor = floor
+			State_matrix[id] = state
+			//Bør si i fra til de andre hvilken etg han er i
+			//
+		case dir := <-new_dir_state_ch:
+			state := State_matrix[id]
+			state.Current_direction = dir
+			State_matrix[id] = state
+
+		case new_order := <-new_order_ch:
+			//sjekk om det er greit for de andre
+			if new_order.Button == BUTTON_COMMAND {
 				state := State_matrix[id]
-				state.Current_floor = floor
+				state.Floors[new_order.Floor] = 2
 				State_matrix[id] = state
-				//Bør si i fra til de andre hvilken etg han er i
-				//
-			case dir := <- new_dir_state_ch:
-				state := State_matrix[id]
-				state.Current_direction = dir
-				State_matrix[id] = state
+			}
+
 		}
 	}
 }
@@ -137,12 +146,17 @@ func Should_stop() bool{
 	return false
 }*/
 
-func Should_stop(current_floor int) bool{
-	if current_floor != -1{
-		return true
-	}else{
-		return false
+func Should_stop() bool {
+	id := GetLocalId()
+	fmt.Println(id)
+	current_floor := State_matrix[id].Current_floor
+	if current_floor != -1 {
+		if State_matrix[id].Floors[current_floor] >= 0 {
+			//sjekk tallet i matrisen opp mot dir
+			return true
+		}
 	}
+	return false
 }
 
 func choose_direction() {
