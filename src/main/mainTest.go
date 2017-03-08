@@ -17,6 +17,8 @@ func main() {
 	floor_reached_ch := make(chan int)
 	order_new_state_ch := make(chan int)
 	new_dir_state_ch := make(chan Driver_motor_dir)
+	delete_order_ch := make(chan int)
+	new_order_ch := make(chan Driver_button_type)
 
 	fmt.Println("Har laget kanaler i main")
 	localid := ""

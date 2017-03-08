@@ -14,7 +14,6 @@ const (
 	BUTTON_CALL_UP   = 0
 	BUTTON_CALL_DOWN = 1
 	BUTTON_COMMAND   = 2
-	NO_BUTTON_PUSHED = -1
 )
 
 type Driver_motor_dir int
@@ -37,6 +36,10 @@ type External_order struct {
 	Down int
 }
 
+type New_order struct {
+	button Driver_button_type
+	floor int
+}
 //deklaring
 var State_matrix = make(map[string]Elevator_states)
 var Internal_orders = make(map[string][]int)

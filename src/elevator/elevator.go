@@ -91,6 +91,7 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 	//floor_reached_ch := make(chan int)
 	//order_new_state_ch := make(chan int)
 	go check_floors(floor_reached_ch)
+	go check_buttons(new_order_ch)
 
 	state := Elevator_states{}
 
@@ -101,9 +102,10 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 			order_new_state_ch <- floor
 			floor_reached(floor, new_dir_state_ch)
 		}
-			/*
+	
 		case new_order := <-new_order_ch:
-			// ...
+			//her må vi sikkert ha noe mer..
+		/*
 		case new_destination := <-destination_ch: // from Order()
 			// ...
 		case door := <-door_ch:
@@ -112,13 +114,14 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 	}
 }
 
-func floor_reached(current_floor int, new_dir_state_ch chan Driver_motor_dir){
+func floor_reached(current_floor int, delete_order_ch chan int, new_dir_state_ch chan Driver_motor_dir){
 	if Should_stop(current_floor) == true{
 		dir := DIRN_STOP
 		Driver_set_motor_direction(DIRN_STOP)
 		new_dir_state_ch <- Driver_motor_dir(dir)
 		open_door()
 		//choose direction
+		Delete_orders(current_floor, delete_order_ch)
 	}
 }
 
@@ -129,6 +132,26 @@ func check_floors(floor_reached_ch chan int) {
 			floor_reached_ch <- floor
 		}
 		time.Sleep(100 * time.Millisecond)
+	}
+}
+
+func check_buttons(new_order_ch chan New_order){
+	for {
+		for floor := 0; floor < N_FLOORS; floor++{
+			if Driver_get_button_signal(BUTTON_CALL_UP, floor) == 1{
+				new_order.floor = floor
+				new_order.button = BUTTON_CALL_UP
+				new_order_ch <- new_order
+			} else if Driver_get_button_signal(BUTTON_CALL_DOWN, floor) == 1{
+				new_order.floor = floor
+				new_order.button = BUTTON_CALL_DOWN
+				new_order_ch <- new_order
+			} else if Driver_get_button_signal(BUTTON_COMMAND, floor)== 1{
+				new_order.floor = floor
+				new_order.button = BUTTON_COMMAND
+				new_order_ch <- new_order
+			}
+		}
 	}
 }
 

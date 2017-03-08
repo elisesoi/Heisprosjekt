@@ -33,6 +33,37 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 				state := State_matrix[id]
 				state.Current_direction = dir
 				State_matrix[id] = state
+
+			case delete_order := <- delete_order_ch:
+				state := State_matrix[id]
+				state.Floors[delete_order] = 0
+				State_matrix[id] = state
+				//oppdater orders og evt internal orders
+				internal := Internal_orders[id]
+				internal[id][delete_order] = 0
+				Internal_orders[id] = internal
+
+				External_orders[delete_order][0] = 0
+				External_orders[delete_order][1] = 0
+				//bcast til de andre
+
+			case new_order := <- new_order_ch:
+				if new_order.button == BUTTON_COMMAND{
+					//bcast til de andre
+					//må få svar før det legges i state_m
+					state := state_matrix[id]
+					state.Floors[new_order.floor] = 1
+					State_matrix[id] = state
+					Internal_orders[id][new_order.floor] = 1
+
+				} else {
+					//if de andre har svart at de har mottatt bestilling
+
+					state := State_matrix[id]
+					state.Floors[new_order.floor] = 1
+					State_matrix[id] = state
+				}
+			
 		}
 	}
 }
@@ -149,9 +180,22 @@ func choose_direction() {
 	//Lik som i 1.klasse?
 }
 
-/*
-func Delete_orders() {
-	floor := State_matrix[id].Current_floor
-	Internal_orders[id][floor] = 0
-	//State_matrix[id] = Elevator_states{Floor_1: 1} MÅ FÅ TIL LISTE TIL FLOOR!!!
-}*/
+
+func Delete_orders(current_floor int, delete_order_ch chan int) {
+	delete_order_ch <- current_floor
+	Driver_set_button_lamp(BUTTON_CALL_UP, current_floor, 0)
+	Driver_set_button_lamp(BUTTON_CALL_DOWN, current_floor, 0)
+	Driver_set_button_lamp(BUTTON_COMMAND, current_floor, 0)
+}
+
+
+
+
+
+
+
+
+
+
+
+
