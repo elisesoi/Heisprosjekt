@@ -168,19 +168,20 @@ func Should_stop(current_floor int) bool {
 }
 
 func Choose_direction(prev_dir Driver_motor_dir, current_floor int, id string) Driver_motor_dir{
-	fmt.Println("Prev dir i choose direction ",prev_dir)
 	switch prev_dir {
 	case DIRN_STOP:
+		fmt.Println("Valgte å stå i ro. Min forrige retning var: ", prev_dir)
 		return DIRN_UP
 	case DIRN_UP:
 		for i:=current_floor; i<N_FLOORS; i++{
 			if State_matrix[id].Floors[i] == 1 {
-				fmt.Println("Retning up, bestilling up, kjør opp")
+				fmt.Println("Valgte å kjør opp. Min forrige retning var: ", prev_dir)
 				return DIRN_UP
 			}
 		}
 		for j := current_floor; j>=0; j--{
 			if State_matrix[id].Floors[j] == 1 {
+				fmt.Println("Valgte å kjør ned. Min forrige retning var: ", prev_dir)
 				return DIRN_DOWN
 			}
 		}
@@ -189,11 +190,13 @@ func Choose_direction(prev_dir Driver_motor_dir, current_floor int, id string) D
 	case DIRN_DOWN: 
 		for j := current_floor; j>=0; j--{
 			if State_matrix[id].Floors[j] == 1 {
+				fmt.Println("Valgte å kjør ned. Min forrige retning var: ", prev_dir)
 				return DIRN_DOWN
 			}
 		}
 		for i:=current_floor; i<N_FLOORS; i++{
 			if State_matrix[id].Floors[i] == 1 {
+				fmt.Println("Valgte å kjør opp. Min forrige retning var: ", prev_dir)
 				return DIRN_UP
 			}
 		}

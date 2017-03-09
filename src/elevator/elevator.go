@@ -9,9 +9,6 @@ import (
 	"time"
 )
 
-//var ip, _ = LocalIP()
-//var id = ip[12:15]
-
 func Initialize_elevator(id string, ) {
 	Driver_init()
 	fmt.Println("Press STOP button to stop elevator and exit program.")
@@ -69,22 +66,24 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 			break
 
 		case floor := <-floor_reached_ch: // this file
+			id := Network.GetLocalId()
 			state.Current_floor = floor
 			order_new_state_ch <- floor
 			//fmt.Println(State_matrix)
 			floor_reached(new_dir_state_ch, delete_order_ch, floor)
 			if floor >= N_FLOORS -1 {
 				new_dir_state_ch <- DIRN_DOWN
-				Driver_set_motor_direction(DIRN_DOWN) // egentlig Choose_direction()
+				Driver_set_motor_direction(Choose_direction(State_matrix[id].Current_direction, floor, id))
 			} else if floor <= 0 {
 				new_dir_state_ch <- DIRN_UP
-				Driver_set_motor_direction(DIRN_UP) // egentlig Choose_direction()
+				Driver_set_motor_direction(Choose_direction(State_matrix[id].Current_direction, floor, id))
 			}
 
 		case new_order := <-new_order_ch:
 			//fmt.Println("New order!!", new_order)
 			//id := Network.GetLocalId()
 			Driver_set_button_lamp(new_order.Button, new_order.Floor, 1)
+
 			//fmt.Println("Choose direction: ", Choose_direction(State_matrix[id].Prev_direction, new_dir_state_ch, State_matrix[id].Current_floor, id))
 			//Driver_set_motor_direction(Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_floor, id))
 			//fmt.Println(State_matrix[id].Prev_direction)
@@ -103,16 +102,13 @@ func floor_reached(new_dir_state_ch chan Driver_motor_dir, delete_order_ch chan 
 		//fmt.Println("Previous direction ", prev_dir)
 		Driver_set_motor_direction(DIRN_STOP)
 		new_dir_state_ch <- DIRN_STOP
-		go open_door()
-		if open_door() == 0 {
-			Delete_orders(delete_order_ch)
-			Driver_set_button_lamp(BUTTON_COMMAND, current_floor, 0)
-			Driver_set_button_lamp(BUTTON_CALL_DOWN, current_floor, 0)
-			Driver_set_button_lamp(BUTTON_CALL_UP, current_floor, 0)
-			//Driver_set_motor_direction(DIRN_UP) //foreløpig
-			new_dir_state_ch <- Choose_direction(prev_dir, current_floor, id)
-			Driver_set_motor_direction(Choose_direction(prev_dir, current_floor, id))
-		}
+		open_door()
+		Delete_orders(delete_order_ch)
+		Driver_set_button_lamp(BUTTON_COMMAND, current_floor, 0)
+		Driver_set_button_lamp(BUTTON_CALL_DOWN, current_floor, 0)
+		Driver_set_button_lamp(BUTTON_CALL_UP, current_floor, 0)
+		new_dir_state_ch <- Choose_direction(prev_dir, current_floor, id)
+		Driver_set_motor_direction(Choose_direction(prev_dir, current_floor, id))
 	}
 }
 
@@ -155,9 +151,8 @@ func check_buttons(new_order_ch chan Order_type) {
 	}
 }
 
-func open_door() int{
+func open_door(){
 	Driver_set_door_open_lamp(1)
 	time.Sleep(3 * time.Second)
 	Driver_set_door_open_lamp(0)
-	return 0
 }
