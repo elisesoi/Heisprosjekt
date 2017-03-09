@@ -46,11 +46,11 @@ func Network(local_id string, sender_ch, recv_ch chan string) {
 
 		//local_id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
 		fmt.Println("Ip inni network", localIP)
-		fmt.Println("Er inni nettverk, prøver å printe id")
+		//fmt.Println("Er inni nettverk, prøver å printe id")
 		id := GetLocalId()
-		fmt.Println("Id: ",id)
+		//fmt.Println("Id: ",id)
 		sender_ch <- id
-		fmt.Println("Har sendt id på kanal sender_ch")
+		//fmt.Println("Har sendt id på kanal sender_ch")
 	}
 	
 	// We make a channel for receiving updates on the id's of the peers that are

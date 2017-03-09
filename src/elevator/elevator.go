@@ -18,7 +18,7 @@ func Initialize_elevator(id string) {
 	Driver_set_motor_direction(DIRN_STOP)
 
 	fmt.Println(id)
-	State_matrix[id] = Elevator_states{Floors: []int{-1, -1, -1, -1}, Current_direction: DIRN_STOP, Current_floor: Driver_get_floor_sensor_signal(), Alive: 1, Door_open: 0}
+	State_matrix[id] = Elevator_states{Floors: []int{0,0,0,0}, Current_direction: DIRN_STOP, Current_floor: 0, Alive: 1, Door_open: 0}
 
 	for floor := 0; floor < N_FLOORS; floor++ {
 		for button_type := 0; button_type < 2; button_type++ {
@@ -50,7 +50,7 @@ func Initialize_elevator(id string) {
 	fmt.Println("Internal: ", Internal_orders[id])
 }
 
-func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch chan Order_type) {
+func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch, delete_order_ch chan Order_type) {
 
 	//floor_reached_ch := make(chan int)
 	//order_new_state_ch := make(chan int)
@@ -73,18 +73,11 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 			state.Current_floor = floor
 			order_new_state_ch <- floor
 			fmt.Println(State_matrix)
-			floor_reached(new_dir_state_ch)
+			floor_reached(new_dir_state_ch, delete_order_ch, floor)
 
 		case new_order := <-new_order_ch:
 			fmt.Println("New order!!", new_order)
-			if Should_stop() == true {
-				Driver_set_motor_direction(DIRN_STOP)
-				open_door()
-				//bcast til de andre
-				Delete_orders()
-				//Choose_direction()
-			}
-
+			//sender bare beskjed til de andre om at det er kommet bestilling
 		}
 
 		/*
@@ -132,12 +125,14 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 
 }
 
-func floor_reached(new_dir_state_ch chan Driver_motor_dir) {
-	if Should_stop() == true {
+func floor_reached(new_dir_state_ch chan Driver_motor_dir, delete_order_ch chan Order_type, current_floor int) {
+	if Should_stop(current_floor) == true {
 		dir := DIRN_STOP
 		Driver_set_motor_direction(DIRN_STOP)
 		new_dir_state_ch <- Driver_motor_dir(dir)
 		open_door()
+		Delete_orders(delete_order_ch)
+		Driver_set_motor_direction(DIRN_UP) //foreløpig
 		//choose direction
 	}
 }

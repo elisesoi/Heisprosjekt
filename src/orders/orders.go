@@ -20,7 +20,7 @@ func Order_default(){
 }
 */
 
-func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch chan Order_type, id string) {
+func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch, delete_order_ch chan Order_type, id string) {
 	for {
 		select {
 		case floor := <-order_new_state_ch:
@@ -38,18 +38,18 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 			//sjekk om det er greit for de andre
 			if new_order.Button == BUTTON_COMMAND {
 				state := State_matrix[id]
-				state.Floors[new_order.Floor] = 2
+				state.Floors[new_order.Floor] = 1
 				State_matrix[id] = state
 			}
-		case delete_order := <- delete_order_ch:
-				state := State_matrix[id]
-				state.Floors[delete_order.Floor] = 0
-				State_matrix[id] = state
-				Internal_orders[id][delete_order.Floor] = 0
-				External_order[delete_order.Floors][0] = 0
-				External_order[delete_order.Floors][1] = 0
-				//må bcaste at den har slettet ordre.
-
+		case delete_order := <-delete_order_ch:
+			state := State_matrix[id]
+			state.Floors[delete_order.Floor] = 0
+			State_matrix[id] = state
+			//sette Internal_orders og External_orders til 0
+			//bcast til de andre at ordre er slettet
+			//Internal_orders[id][delete_order.Floor] = 0
+			//External_order[delete_order.Floors][0] = 0
+			//External_order[delete_order.Floors][1] = 0
 		}
 	}
 }
@@ -89,16 +89,17 @@ func choose_elevator(){
 }
 */
 
-func Should_stop() bool {
+func Should_stop(current_floor int) bool {
 	id := GetLocalId()
 	fmt.Println(id)
-	current_floor := State_matrix[id].Current_floor
-	if current_floor != -1 {
-		if State_matrix[id].Floors[current_floor] >= 0 {
-			//sjekk tallet i matrisen opp mot dir
-			return true
-		}
+	fmt.Println("Current floor", current_floor)
+	fmt.Println("ordre i etg fra matrise: ",State_matrix[id].Floors[current_floor])
+	if State_matrix[id].Floors[current_floor] == 1 {
+		//må sjekke mot Internal_orders og External_orders
+		//sjekk tallet i matrisen opp mot dir
+		return true
 	}
+	fmt.Println("Should stop?")
 	return false
 }
 
@@ -106,12 +107,12 @@ func choose_direction() {
 	//Lik som i 1.klasse?
 }
 
-delete_order_ch := make(chan Order_type)
-func Delete_orders() {
+
+func Delete_orders(delete_order_ch chan Order_type) {
+	id := GetLocalId()
 	var order_to_delete Order_type
 	order_to_delete.Floor = State_matrix[id].Current_floor
 	delete_order_ch <- order_to_delete
-
 }
 
 
