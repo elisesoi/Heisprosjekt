@@ -14,10 +14,9 @@ import (
 
 func Initialize_elevator(id string, ) {
 	Driver_init()
-	fmt.Println("Press STOP button to stop elevator and exit program.\n")
+	fmt.Println("Press STOP button to stop elevator and exit program.")
 	Driver_set_motor_direction(DIRN_STOP)
 
-	fmt.Println(id)
 	State_matrix[id] = Elevator_states{Floors: []int{0,0,0,0}, Current_direction: DIRN_STOP, Current_floor: 0, Alive: 1}
 
 	for floor := 0; floor < N_FLOORS; floor++ {
@@ -44,7 +43,6 @@ func Initialize_elevator(id string, ) {
 	//JUHUU! eg leve. Her e id-en min :) peerupdatech?
 	//spør de andre etter oppdatering. if svar fra de andre: oppdater state_matrix
 
-	fmt.Println("Key til state_matrix")
 	fmt.Println("State matrix: ", State_matrix) //for å se om tallene blir satt rett
 	fmt.Println("External: ", External_orders)
 	fmt.Println("Internal: ", Internal_orders[id])
@@ -74,14 +72,19 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 		case floor := <-floor_reached_ch: // this file
 			state.Current_floor = floor
 			order_new_state_ch <- floor
-			fmt.Println(State_matrix)
+			//fmt.Println(State_matrix)
 			floor_reached(new_dir_state_ch, delete_order_ch, floor)
 
 		case new_order := <-new_order_ch:
-			fmt.Println("New order!!", new_order)
+			//fmt.Println("New order!!", new_order)
 			Driver_set_button_lamp(new_order.Button, new_order.Floor, 1)
 			//sender bare beskjed til de andre om at det er kommet bestilling
+
+
 		}
+
+	
+
 		// Change direction when we reach top/bottom floor
 		if Driver_get_floor_sensor_signal() == N_FLOORS-1 {
 			Driver_set_motor_direction(DIRN_DOWN)
@@ -149,7 +152,6 @@ func check_buttons(new_order_ch chan Order_type) {
 
 func open_door() {
 	Driver_set_door_open_lamp(1)
-	fmt.Println(State_matrix)
 	time.Sleep(3 * time.Second)
 	Driver_set_door_open_lamp(0)
 }

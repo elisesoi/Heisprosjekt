@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	
 	sender_ch := make(chan string)
 	recv_ch := make(chan string)
 	new_peer_ch := make(chan string)
@@ -23,15 +24,11 @@ func main() {
 	delete_order_ch := make(chan Order_type)
 
 	//fmt.Println("Har laget kanaler i main")
-	localid := ""
+	localid := GetLocalId()
+	Initialize_elevator(localid)
 
 	go Network(localid, sender_ch, recv_ch, new_peer_ch)
-	local_id := <-recv_ch
-	//ny_id := <- new_peer_ch
-	//fmt.Println(local_id)
-
-	Initialize_elevator(local_id)
-	go Order(order_new_state_ch, new_dir_state_ch, new_order_ch, delete_order_ch, local_id)
+	go Order(order_new_state_ch, new_dir_state_ch, new_order_ch, delete_order_ch, new_peer_ch, localid)
 	go Elevator_loop(floor_reached_ch, order_new_state_ch, new_dir_state_ch, new_order_ch, delete_order_ch)
 
 	select {}

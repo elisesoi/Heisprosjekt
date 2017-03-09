@@ -4,9 +4,11 @@ import (
 	"./network/bcast"
 	"./network/localip"
 	"./network/peers"
+	//"../driver"
 	//"flag"
 	"fmt"
 	//"os"
+	//"time"
 )
 
 // We define some custom struct to send over the network.
@@ -34,33 +36,16 @@ func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string) {
 
 	go bcast.Transmitter(16585, helloTx, sendTx, sender_ch)
 	go bcast.Receiver(16585, helloRx, sendRx, recv_ch)
-	// ... or alternatively, we can use the local IP address.
-	// (But since we can run multiple programs on the same PC, we also append the
-	//  process ID)
-	if local_id == "" {
-		localIP, err := localip.LocalIP()
-		if err != nil {
-			fmt.Println(err)
-			localIP = "DISCONNECTED"
-		}
-
-		//local_id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
-		fmt.Println("Ip inni network", localIP)
-		//fmt.Println("Er inni nettverk, prøver å printe id")
-		id := GetLocalId()
-		//fmt.Println("Id: ",id)
-		sender_ch <- id
-		//fmt.Println("Har sendt id på kanal sender_ch")
-	}
 	
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
 	peerUpdateCh := make(chan peers.PeerUpdate)
+	//stateUpdateCh := make(chan driver.Elevator_states)
 	// We can disable/enable the transmitter after it has been started.
 	// This could be used to signal that we are somehow "unavailable".
 	peerTxEnable := make(chan bool)
-	go peers.Transmitter(20019, local_id, peerTxEnable)
-	go peers.Receiver(20019, peerUpdateCh)
+	go peers.Transmitter(20319, local_id, peerTxEnable)
+	go peers.Receiver(20319, peerUpdateCh)
 
 	// We make channels for sending and receiving our custom data types
 
@@ -71,7 +56,8 @@ func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string) {
 
 	// The example message. We just send one of these every second.
 	//go func() {
-	//	helloMsg := HelloMsg{"Hello from " + id, 0}
+	//
+	//	helloMsg := HelloMsg{"Hello from " + local_id, 0}
 	//	for {
 	//		helloMsg.Iter++
 	//		helloTx <- helloMsg
@@ -82,12 +68,15 @@ func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string) {
 	fmt.Println("Started")
 	for {
 		select {
+		//case state_update := <- stateUpdateCh:
+
 		case p := <-peerUpdateCh:
 			if p.New != ""{
 				//legg til i map
-				ny_id := p.New[12:15]
+				new_id := p.New
 				//send ny id på kanal
-				new_peer_ch <- ny_id
+				new_peer_ch <- new_id
+				fmt.Println("Det er oppdaget en ny heis, med id: ",new_id)
 			}
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", p.Peers)

@@ -20,7 +20,7 @@ func Order_default(){
 }
 */
 
-func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch, delete_order_ch chan Order_type, id string) {
+func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch, delete_order_ch chan Order_type, new_peer_ch chan string, id string) {
 	for {
 		select {
 		case floor := <-order_new_state_ch:
@@ -45,13 +45,13 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 				//bcast til de andre
 			}else if new_order.Button == BUTTON_CALL_UP{
 				External_orders[new_order.Floor][1] = EXTERNAL_ORDER
-				fmt.Println("call up", External_orders)
+				//fmt.Println("call up", External_orders)
 				//spør kost hvem som skal ta bestilling
 				//send til de andre, vent på svar
 				//når svar fra alle: legg til i state_matrix og endre External_order til heis som tar bestilling til 1 (istede for 9)
 			}else if new_order.Button == BUTTON_CALL_DOWN{
 				External_orders[new_order.Floor][0] = EXTERNAL_ORDER
-				fmt.Println("call down", External_orders)
+				//fmt.Println("call down", External_orders)
 				//spør kost hvem som skal ta bestilling
 				//send til de andre, vent på svar
 				//når svar fra alle: legg til i state_matrix og endre External_order til heis som tar bestilling til 1 (istede for 9)
@@ -65,6 +65,23 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 			//Internal_orders[id][delete_order.Floor] = 0
 			//External_order[delete_order.Floors][0] = 0
 			//External_order[delete_order.Floors][1] = 0
+
+		case newPeer := <- new_peer_ch:
+			//legg til newPeer til state_matrix
+			State_matrix[newPeer] = Elevator_states{Floors: []int{0,0,0,0}, Current_direction: DIRN_STOP, Current_floor: 0, Alive: 1}
+			
+			fmt.Println(State_matrix)
+			//spør den nye heisen om den har bestilliger fra før? etg? oppdater?
+			//legg til newPeer til Internal_orders
+			//if Internal_orders[newPeer] ikke finnes{}
+		
+			// hvis internal orders allerede har en heis med den id-en, så send internal orders til denne heisen. 
+
+		/*
+		case lostPeer := <- lost_peer_ch:
+			//gi bestillinger fra lostPeer til en annen heis
+			//slett lostPeer fra State_matrix
+		*/
 		}
 	}
 }
@@ -106,9 +123,9 @@ func choose_elevator(){
 
 func Should_stop(current_floor int) bool {
 	id := GetLocalId()
-	fmt.Println(id)
-	fmt.Println("Current floor", current_floor)
-	fmt.Println("ordre i etg fra matrise: ",State_matrix[id].Floors[current_floor])
+	//fmt.Println(id)
+	//fmt.Println("Current floor", current_floor)
+	//fmt.Println("ordre i etg fra matrise: ",State_matrix[id].Floors[current_floor])
 	if State_matrix[id].Floors[current_floor] == 1 {
 		if Internal_orders[id][current_floor] == 1{
 			return true
@@ -117,7 +134,7 @@ func Should_stop(current_floor int) bool {
 		//sjekk tallet i matrisen opp mot dir
 		return true
 	}
-	fmt.Println("Should stop?")
+	//fmt.Println("Should stop?")
 	return false
 }
 
