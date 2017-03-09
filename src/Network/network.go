@@ -71,18 +71,21 @@ func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string) {
 		//case state_update := <- stateUpdateCh:
 
 		case p := <-peerUpdateCh:
-			if p.New != ""{
-				//legg til i map
+			if p.New != "" {
 				new_id := p.New
-				//send ny id på kanal
-				new_peer_ch <- new_id
-				fmt.Println("Det er oppdaget en ny heis, med id: ",new_id)
-			}
+				new_peer_ch <- new_id //send ny id på kanal
+				//fmt.Println("Det er oppdaget en ny heis med id: ", new_id)
+			} /*else if p.Lost !=[""]{
+				lost_id := p.Lost
+				lost_peer_ch <- lost_id
+				//fmt.Println("Vi har mistet kontakt med heis: ", lost_id)
+			}*/
+			
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
-
+			
 		case a := <-helloRx:
 			fmt.Printf("Received: %#v\n", a)
 		}

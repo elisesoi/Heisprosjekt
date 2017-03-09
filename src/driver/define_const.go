@@ -28,6 +28,7 @@ const (
 type Elevator_states struct {
 	Floors            []int
 	Current_direction Driver_motor_dir
+	Prev_direction	Driver_motor_dir
 	Current_floor     int
 	Alive             int
 }

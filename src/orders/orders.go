@@ -20,7 +20,7 @@ func Order_default(){
 }
 */
 
-func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch, delete_order_ch chan Order_type, new_peer_ch chan string, id string) {
+func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch, delete_order_ch chan Order_type, new_peer_ch chan string, lost_peer_ch chan []string, id string) {
 	for {
 		select {
 		case floor := <-order_new_state_ch:
@@ -31,9 +31,16 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 			//
 		case dir := <-new_dir_state_ch:
 			state := State_matrix[id]
+			state.Prev_direction = State_matrix[id].Current_direction
 			state.Current_direction = dir
 			State_matrix[id] = state
+			fmt.Println("dir: ", dir)
 
+			/*
+			state := State_matrix[id]
+			state.Current_direction = dir
+			State_matrix[id] = state
+			*/
 		case new_order := <-new_order_ch:
 			//sjekk om det er greit for de andre
 			if new_order.Button == BUTTON_COMMAND {
@@ -48,12 +55,22 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 				//fmt.Println("call up", External_orders)
 				//spør kost hvem som skal ta bestilling
 				//send til de andre, vent på svar
+				// MIDLERTIDIG: (bare for at den skal stoppe for ytre bestillinger også.)
+				state := State_matrix[id]
+				state.Floors[new_order.Floor] = 1
+				State_matrix[id] = state
+				External_orders[new_order.Floor][1] = 1
 				//når svar fra alle: legg til i state_matrix og endre External_order til heis som tar bestilling til 1 (istede for 9)
 			}else if new_order.Button == BUTTON_CALL_DOWN{
 				External_orders[new_order.Floor][0] = EXTERNAL_ORDER
 				//fmt.Println("call down", External_orders)
 				//spør kost hvem som skal ta bestilling
 				//send til de andre, vent på svar
+				// MIDLERTIDIG: (bare for at den skal stoppe for ytre bestillinger også.)
+				state := State_matrix[id]
+				state.Floors[new_order.Floor] = 1
+				State_matrix[id] = state
+				External_orders[new_order.Floor][0] = 1
 				//når svar fra alle: legg til i state_matrix og endre External_order til heis som tar bestilling til 1 (istede for 9)
 			}
 		case delete_order := <-delete_order_ch:
@@ -68,19 +85,28 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 
 		case newPeer := <- new_peer_ch:
 			//legg til newPeer til state_matrix
-			State_matrix[newPeer] = Elevator_states{Floors: []int{0,0,0,0}, Current_direction: DIRN_STOP, Current_floor: 0, Alive: 1}
-			
+			State_matrix[newPeer] = Elevator_states{Floors: []int{0,0,0,0}, Current_direction: DIRN_STOP, Prev_direction: DIRN_STOP, Current_floor: 0, Alive: 1}
+
 			fmt.Println(State_matrix)
 			//spør den nye heisen om den har bestilliger fra før? etg? oppdater?
 			//legg til newPeer til Internal_orders
 			//if Internal_orders[newPeer] ikke finnes{}
 		
 			// hvis internal orders allerede har en heis med den id-en, så send internal orders til denne heisen. 
-
 		/*
 		case lostPeer := <- lost_peer_ch:
 			//gi bestillinger fra lostPeer til en annen heis
-			//slett lostPeer fra State_matrix
+
+			for floor := 0; floor<N_FLOORS; floor++{
+				if State_matrix[lostPeer[0]].Floors[floor] == 1{
+					local_id := GetLocalId()
+					State_matrix[local_id].Floors[floor] = 1
+					Internal_orders[local_id][floor] = 1
+					fmt.Println("Heisen som døde ", lostPeer[0]," hadde en bestilling i etg ", floor, "som ble lagt til i heis: ", local_id)
+				}
+			}
+			 
+			delete(State_matrix, lostPeer) //slett lostPeer fra State_matrix
 		*/
 		}
 	}
@@ -129,17 +155,51 @@ func Should_stop(current_floor int) bool {
 	if State_matrix[id].Floors[current_floor] == 1 {
 		if Internal_orders[id][current_floor] == 1{
 			return true
-		}
+		} else if External_orders[current_floor][0] == 1 {// && State_matrix[id].Current_direction == -1
 		//må sjekke mot Internal_orders og External_orders
 		//sjekk tallet i matrisen opp mot dir
-		return true
+			return true
+		} else if External_orders[current_floor][1] == 1 {// && State_matrix[id].Current_direction == 1
+			return true
+		}
 	}
 	//fmt.Println("Should stop?")
 	return false
 }
 
-func choose_direction() {
-	//Lik som i 1.klasse?
+func Choose_direction(prev_dir Driver_motor_dir, current_floor int, id string) Driver_motor_dir{
+	fmt.Println("Prev dir i choose direction ",prev_dir)
+	switch prev_dir {
+	case DIRN_STOP:
+		return DIRN_UP
+	case DIRN_UP:
+		for i:=current_floor; i<N_FLOORS; i++{
+			if State_matrix[id].Floors[i] == 1 {
+				fmt.Println("Retning up, bestilling up, kjør opp")
+				return DIRN_UP
+			}
+		}
+		for j := current_floor; j>=0; j--{
+			if State_matrix[id].Floors[j] == 1 {
+				return DIRN_DOWN
+			}
+		}
+		//return DIRN_STOP
+
+	case DIRN_DOWN: 
+		for j := current_floor; j>=0; j--{
+			if State_matrix[id].Floors[j] == 1 {
+				return DIRN_DOWN
+			}
+		}
+		for i:=current_floor; i<N_FLOORS; i++{
+			if State_matrix[id].Floors[i] == 1 {
+				return DIRN_UP
+			}
+		}
+		//return DIRN_STOP
+	}
+	return DIRN_STOP
 }
 
 
