@@ -30,7 +30,6 @@ type Elevator_states struct {
 	Current_direction Driver_motor_dir
 	Current_floor     int
 	Alive             int
-	Door_open         int
 }
 
 type External_order struct {

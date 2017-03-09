@@ -26,7 +26,7 @@ func GetLocalId() string{
 	return localIP[12:15]
 }
 
-func Network(local_id string, sender_ch, recv_ch chan string) {
+func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string) {
 	helloTx := make(chan HelloMsg)
 	helloRx := make(chan HelloMsg)
 	sendTx := make(chan bool) //kanal som (acc) = accnolage som svarer om en har fått melding
@@ -83,6 +83,12 @@ func Network(local_id string, sender_ch, recv_ch chan string) {
 	for {
 		select {
 		case p := <-peerUpdateCh:
+			if p.New != ""{
+				//legg til i map
+				ny_id := p.New[12:15]
+				//send ny id på kanal
+				new_peer_ch <- ny_id
+			}
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)

@@ -13,6 +13,8 @@ import (
 func main() {
 	sender_ch := make(chan string)
 	recv_ch := make(chan string)
+	new_peer_ch := make(chan string)
+
 	floor_reached_ch := make(chan int)
 	order_new_state_ch := make(chan int)
 	new_dir_state_ch := make(chan Driver_motor_dir)
@@ -23,8 +25,9 @@ func main() {
 	//fmt.Println("Har laget kanaler i main")
 	localid := ""
 
-	go Network(localid, sender_ch, recv_ch)
+	go Network(localid, sender_ch, recv_ch, new_peer_ch)
 	local_id := <-recv_ch
+	//ny_id := <- new_peer_ch
 	//fmt.Println(local_id)
 
 	Initialize_elevator(local_id)

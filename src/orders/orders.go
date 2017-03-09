@@ -40,6 +40,21 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 				state := State_matrix[id]
 				state.Floors[new_order.Floor] = 1
 				State_matrix[id] = state
+
+				Internal_orders[id][new_order.Floor] = 1
+				//bcast til de andre
+			}else if new_order.Button == BUTTON_CALL_UP{
+				External_orders[new_order.Floor][1] = EXTERNAL_ORDER
+				fmt.Println("call up", External_orders)
+				//spør kost hvem som skal ta bestilling
+				//send til de andre, vent på svar
+				//når svar fra alle: legg til i state_matrix og endre External_order til heis som tar bestilling til 1 (istede for 9)
+			}else if new_order.Button == BUTTON_CALL_DOWN{
+				External_orders[new_order.Floor][0] = EXTERNAL_ORDER
+				fmt.Println("call down", External_orders)
+				//spør kost hvem som skal ta bestilling
+				//send til de andre, vent på svar
+				//når svar fra alle: legg til i state_matrix og endre External_order til heis som tar bestilling til 1 (istede for 9)
 			}
 		case delete_order := <-delete_order_ch:
 			state := State_matrix[id]
@@ -95,6 +110,9 @@ func Should_stop(current_floor int) bool {
 	fmt.Println("Current floor", current_floor)
 	fmt.Println("ordre i etg fra matrise: ",State_matrix[id].Floors[current_floor])
 	if State_matrix[id].Floors[current_floor] == 1 {
+		if Internal_orders[id][current_floor] == 1{
+			return true
+		}
 		//må sjekke mot Internal_orders og External_orders
 		//sjekk tallet i matrisen opp mot dir
 		return true
