@@ -81,7 +81,7 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 				Driver_set_motor_direction(DIRN_STOP)
 				open_door()
 				//bcast til de andre
-				//Delete_orders()
+				Delete_orders()
 				//Choose_direction()
 			}
 
