@@ -20,7 +20,7 @@ func Order_default(){
 }
 */
 
-func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch, delete_order_ch chan Order_type, new_peer_ch chan string, lost_peer_ch chan []string, id string) {
+func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch, delete_order_ch chan Order_type, new_peer_ch chan string, lost_peer_ch chan []string, new_state_ch chan Elevator_states, id string) {
 	for {
 		select {
 		case floor := <-order_new_state_ch:
@@ -28,6 +28,7 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 			state.Current_floor = floor
 			State_matrix[id] = state
 			//Bør si i fra til de andre hvilken etg han er i
+			new_state_ch <- State_matrix[id] //idelt ville vi kanskje bare sendt floor, ikke heilt map-et
 			//
 		case dir := <-new_dir_state_ch:
 			state := State_matrix[id]
@@ -36,11 +37,6 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 			State_matrix[id] = state
 			fmt.Println("dir: ", dir)
 
-			/*
-			state := State_matrix[id]
-			state.Current_direction = dir
-			State_matrix[id] = state
-			*/
 		case new_order := <-new_order_ch:
 			//sjekk om det er greit for de andre
 			if new_order.Button == BUTTON_COMMAND {
@@ -167,11 +163,9 @@ func Should_stop(current_floor int) bool {
 	return false
 }
 
-func Choose_direction(prev_dir Driver_motor_dir, current_floor int, id string) Driver_motor_dir{
+func Choose_direction(prev_dir, current_direction Driver_motor_dir, current_floor int, id string) Driver_motor_dir{
+	/*
 	switch prev_dir {
-	case DIRN_STOP:
-		fmt.Println("Valgte å stå i ro. Min forrige retning var: ", prev_dir)
-		return DIRN_UP
 	case DIRN_UP:
 		for i:=current_floor; i<N_FLOORS; i++{
 			if State_matrix[id].Floors[i] == 1 {
@@ -201,6 +195,56 @@ func Choose_direction(prev_dir Driver_motor_dir, current_floor int, id string) D
 			}
 		}
 		//return DIRN_STOP
+	}*/
+
+	switch current_direction{
+	case DIRN_STOP:
+		//fmt.Println("Valgte å stå i ro. Min forrige retning var: ", prev_dir)
+		if prev_dir == 1{
+			for i:=current_floor; i<N_FLOORS; i++{
+				if State_matrix[id].Floors[i] == 1 {
+					fmt.Println("Valgte å kjør opp. Min forrige retning var: ", prev_dir)
+					return DIRN_UP
+				}
+			}
+		}else if prev_dir == -1{
+			for j := current_floor; j>=0; j--{
+				if State_matrix[id].Floors[j] == 1 {
+					fmt.Println("Valgte å kjør ned. Min forrige retning var: ", prev_dir)
+					return DIRN_DOWN
+				}
+			}
+		}else if prev_dir == 0{
+			for i:=current_floor; i<N_FLOORS; i++{
+				if State_matrix[id].Floors[i] == 1 {
+					fmt.Println("Valgte å kjør opp. Min forrige retning var: ", prev_dir)
+					return DIRN_UP
+				}
+			}
+			for j := current_floor; j>=0; j--{
+				if State_matrix[id].Floors[j] == 1 {
+					fmt.Println("Valgte å kjør ned. Min forrige retning var: ", prev_dir)
+					return DIRN_DOWN
+				}
+			}
+		}
+	case DIRN_UP:
+		//hvis ingen besitllinger, stop
+		for i:=current_floor; i<N_FLOORS; i++{
+				if State_matrix[id].Floors[i] == 1 {
+					//fmt.Println("Valgte å kjør opp. Min forrige retning var: ", prev_dir)
+					return DIRN_UP
+				}
+			}
+		return DIRN_STOP
+	case DIRN_DOWN:
+		for j := current_floor; j>=0; j--{
+			if State_matrix[id].Floors[j] == 1 {
+				fmt.Println("Valgte å kjør ned. Min forrige retning var: ", prev_dir)
+				return DIRN_DOWN
+			}
+		}
+		return DIRN_STOP
 	}
 	return DIRN_STOP
 }

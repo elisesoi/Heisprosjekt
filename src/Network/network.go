@@ -4,7 +4,7 @@ import (
 	"./network/bcast"
 	"./network/localip"
 	"./network/peers"
-	//"../driver"
+	."../driver"
 	//"flag"
 	"fmt"
 	//"os"
@@ -28,19 +28,18 @@ func GetLocalId() string{
 	return localIP[12:15]
 }
 
-func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string) {
+func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string, new_state_ch chan Elevator_states) {
 	helloTx := make(chan HelloMsg)
 	helloRx := make(chan HelloMsg)
-	sendTx := make(chan bool) //kanal som (acc) = accnolage som svarer om en har fått melding
-	sendRx := make(chan bool)
+	statesTx := make(chan Elevator_states) //kanal som (acc) = accnolage som svarer om en har fått melding
+	statesRx := make(chan Elevator_states)
 
-	go bcast.Transmitter(16585, helloTx, sendTx, sender_ch)
-	go bcast.Receiver(16585, helloRx, sendRx, recv_ch)
+	go bcast.Transmitter(16585, helloTx, statesTx, sender_ch)
+	go bcast.Receiver(16585, helloRx, statesRx, recv_ch)
 	
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
 	peerUpdateCh := make(chan peers.PeerUpdate)
-	//stateUpdateCh := make(chan driver.Elevator_states)
 	// We can disable/enable the transmitter after it has been started.
 	// This could be used to signal that we are somehow "unavailable".
 	peerTxEnable := make(chan bool)
@@ -88,8 +87,14 @@ func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string) {
 			
 		case a := <-helloRx:
 			fmt.Printf("Received: %#v\n", a)
-		}
-	
 
+		case state_update_tx := <- new_state_ch:
+			//skal bcastes til alle på stateUpdateCh
+			fmt.Println("Dette er state_updates sendt til network via new_state_ch ", state_update_tx)
+			statesTx <- state_update_tx
+		case state_update_rx := <- statesRx:
+			fmt.Println("Har Fått oppdatering fra en annen heis", state_update_rx)
+			//send til orders, som oppdaterer mapet til respektive heis
+		}
 	}
 }

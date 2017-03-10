@@ -14,7 +14,7 @@ func Initialize_elevator(id string, ) {
 	fmt.Println("Press STOP button to stop elevator and exit program.")
 	Driver_set_motor_direction(DIRN_STOP)
 
-	State_matrix[id] = Elevator_states{Floors: []int{0,0,0,0}, Current_direction: DIRN_STOP, Prev_direction: DIRN_STOP, Current_floor: 0, Alive: 1}
+	State_matrix[id] = Elevator_states{Floors: []int{0,0,0,0}, Current_direction: DIRN_STOP, Prev_direction: DIRN_UP, Current_floor: 0, Alive: 1}
 
 	for floor := 0; floor < N_FLOORS; floor++ {
 		for button_type := 0; button_type < 2; button_type++ {
@@ -39,6 +39,7 @@ func Initialize_elevator(id string, ) {
 
 	//JUHUU! eg leve. Her e id-en min :) peerupdatech?
 	//spør de andre etter oppdatering. if svar fra de andre: oppdater state_matrix
+	//dette skal network init ta seg av (inni network, før for-løkka)
 
 	fmt.Println("State matrix: ", State_matrix) //for å se om tallene blir satt rett
 	fmt.Println("External: ", External_orders)
@@ -46,8 +47,6 @@ func Initialize_elevator(id string, ) {
 }
 
 func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch, delete_order_ch chan Order_type) {
-	//floor_reached_ch := make(chan int)
-	//order_new_state_ch := make(chan int)
 
 	stop_button_pushed_ch := make(chan int)
 	go check_floors(floor_reached_ch)
@@ -71,24 +70,23 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 			order_new_state_ch <- floor
 			//fmt.Println(State_matrix)
 			floor_reached(new_dir_state_ch, delete_order_ch, floor)
+			Driver_set_motor_direction(Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id))
+			new_dir_state_ch <- Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id)
+
 			if floor >= N_FLOORS -1 {
 				new_dir_state_ch <- DIRN_DOWN
-				Driver_set_motor_direction(Choose_direction(State_matrix[id].Current_direction, floor, id))
+				Driver_set_motor_direction(Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id))
 			} else if floor <= 0 {
 				new_dir_state_ch <- DIRN_UP
-				Driver_set_motor_direction(Choose_direction(State_matrix[id].Current_direction, floor, id))
+				Driver_set_motor_direction(Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id))
 			}
-
 		case new_order := <-new_order_ch:
 			//fmt.Println("New order!!", new_order)
 			//id := Network.GetLocalId()
 			Driver_set_button_lamp(new_order.Button, new_order.Floor, 1)
-
-			//fmt.Println("Choose direction: ", Choose_direction(State_matrix[id].Prev_direction, new_dir_state_ch, State_matrix[id].Current_floor, id))
-			//Driver_set_motor_direction(Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_floor, id))
-			//fmt.Println(State_matrix[id].Prev_direction)
-			//fmt.Println(State_matrix[id].Current_floor)
-			//Choose_direction(prev_dir Driver_motor_dir, current_floor int, id string) Driver_motor_dir
+			//if State_matrix[id].Current_direction == DIRN_STOP{
+				//Driver_set_motor_direction(Choose_direction(State_matrix[id].Current_direction, State_matrix[id].Current_floor, id))
+			//}
 			//sender bare beskjed til de andre om at det er kommet bestilling
 
 		}
@@ -97,8 +95,9 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 
 func floor_reached(new_dir_state_ch chan Driver_motor_dir, delete_order_ch chan Order_type, current_floor int) {
 	if Should_stop(current_floor) == true {
-		id := Network.GetLocalId()
-		prev_dir := State_matrix[id].Prev_direction
+		//id := Network.GetLocalId()
+		//prev_dir := State_matrix[id].Prev_direction
+		//current_dir := State_matrix[id].Current_direction
 		//fmt.Println("Previous direction ", prev_dir)
 		Driver_set_motor_direction(DIRN_STOP)
 		new_dir_state_ch <- DIRN_STOP
@@ -107,8 +106,8 @@ func floor_reached(new_dir_state_ch chan Driver_motor_dir, delete_order_ch chan 
 		Driver_set_button_lamp(BUTTON_COMMAND, current_floor, 0)
 		Driver_set_button_lamp(BUTTON_CALL_DOWN, current_floor, 0)
 		Driver_set_button_lamp(BUTTON_CALL_UP, current_floor, 0)
-		new_dir_state_ch <- Choose_direction(prev_dir, current_floor, id)
-		Driver_set_motor_direction(Choose_direction(prev_dir, current_floor, id))
+		//new_dir_state_ch <- Choose_direction(prev_dir, current_dir, current_floor, id)
+		//Driver_set_motor_direction(Choose_direction(prev_dir, current_dir, current_floor, id))
 	}
 }
 
