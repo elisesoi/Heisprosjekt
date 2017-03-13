@@ -35,7 +35,7 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 			state.Prev_direction = State_matrix[id].Current_direction
 			state.Current_direction = dir
 			State_matrix[id] = state
-			fmt.Println("dir: ", dir)
+			//fmt.Println("dir: ", dir)
 
 		case new_order := <-new_order_ch:
 			//sjekk om det er greit for de andre
@@ -45,6 +45,7 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 				State_matrix[id] = state
 
 				Internal_orders[id][new_order.Floor] = 1
+				Driver_set_button_lamp(new_order.Button, new_order.Floor, 1)
 				//bcast til de andre
 			} else if new_order.Button == BUTTON_CALL_UP {
 				External_orders[new_order.Floor][1] = EXTERNAL_ORDER
@@ -56,6 +57,7 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 				state.Floors[new_order.Floor] = 1
 				State_matrix[id] = state
 				External_orders[new_order.Floor][1] = 1
+				Driver_set_button_lamp(new_order.Button, new_order.Floor, 1)
 				//når svar fra alle: legg til i state_matrix og endre External_order til heis som tar bestilling til 1 (istede for 9)
 			} else if new_order.Button == BUTTON_CALL_DOWN {
 				External_orders[new_order.Floor][0] = EXTERNAL_ORDER
@@ -67,17 +69,17 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 				state.Floors[new_order.Floor] = 1
 				State_matrix[id] = state
 				External_orders[new_order.Floor][0] = 1
+				Driver_set_button_lamp(new_order.Button, new_order.Floor, 1)
 				//når svar fra alle: legg til i state_matrix og endre External_order til heis som tar bestilling til 1 (istede for 9)
 			}
 		case delete_order := <-delete_order_ch:
 			state := State_matrix[id]
 			state.Floors[delete_order.Floor] = 0
 			State_matrix[id] = state
-			//sette Internal_orders og External_orders til 0
 			//bcast til de andre at ordre er slettet
-			//Internal_orders[id][delete_order.Floor] = 0
-			//External_order[delete_order.Floors][0] = 0
-			//External_order[delete_order.Floors][1] = 0
+			Internal_orders[id][delete_order.Floor] = 0
+			External_orders[delete_order.Floor][0] = 0
+			External_orders[delete_order.Floor][1] = 0
 
 		case newPeer := <-new_peer_ch:
 			//legg til newPeer til state_matrix

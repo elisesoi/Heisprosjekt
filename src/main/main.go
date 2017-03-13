@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	
+
 	sender_ch := make(chan string)
 	recv_ch := make(chan string)
 	new_peer_ch := make(chan string)
@@ -31,7 +31,7 @@ func main() {
 
 	go Network(localid, sender_ch, recv_ch, new_peer_ch, new_state_ch)
 	go Order(order_new_state_ch, new_dir_state_ch, new_order_ch, delete_order_ch, new_peer_ch, lost_peer_ch, new_state_ch, localid)
-	go Elevator_loop(floor_reached_ch, order_new_state_ch, new_dir_state_ch, new_order_ch, delete_order_ch)
+	go Elevator_loop(floor_reached_ch, order_new_state_ch, new_dir_state_ch, new_order_ch, delete_order_ch, localid)
 
 	select {}
 

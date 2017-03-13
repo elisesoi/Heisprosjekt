@@ -1,7 +1,6 @@
 package elevator
 
 import (
-	"../Network"
 	. "../driver"
 	. "../orders"
 	"fmt"
@@ -46,7 +45,7 @@ func Initialize_elevator(id string) {
 	fmt.Println("Internal: ", Internal_orders[id])
 }
 
-func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch, delete_order_ch chan Order_type) {
+func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, new_order_ch, delete_order_ch chan Order_type, id string) {
 
 	stop_button_pushed_ch := make(chan int)
 	go check_floors(floor_reached_ch)
@@ -62,9 +61,8 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 			Driver_set_motor_direction(DIRN_STOP)
 			break
 
-		case floor := <-floor_reached_ch: // this file
+		case floor := <-floor_reached_ch:
 			Driver_set_floor_indicator(floor)
-			id := Network.GetLocalId()
 			state.Current_floor = floor
 			order_new_state_ch <- floor
 			if Should_stop(floor) == true {
@@ -76,8 +74,9 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 				Driver_set_button_lamp(BUTTON_CALL_DOWN, floor, 0)
 				Driver_set_button_lamp(BUTTON_CALL_UP, floor, 0)
 			}
-			Driver_set_motor_direction(Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id))
-			new_dir_state_ch <- Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id)
+			dir := Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id)
+			Driver_set_motor_direction(dir)
+			new_dir_state_ch <- dir
 
 			if floor >= N_FLOORS-1 {
 				new_dir_state_ch <- DIRN_DOWN
@@ -85,12 +84,9 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 				new_dir_state_ch <- DIRN_UP
 			}
 		case new_order := <-new_order_ch:
-			Driver_set_button_lamp(new_order.Button, new_order.Floor, 1)
-			//if State_matrix[id].Current_direction == DIRN_STOP{
-			//Driver_set_motor_direction(Choose_direction(State_matrix[id].Current_direction, State_matrix[id].Current_floor, id))
-			//}
-			//sender bare beskjed til de andre om at det er kommet bestilling
-
+			if State_matrix[id].Floors[new_order.Floor] == 1 {
+				Driver_set_button_lamp(new_order.Button, new_order.Floor, 1)
+			}
 		}
 	}
 }
