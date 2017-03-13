@@ -71,7 +71,7 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 				Driver_set_motor_direction(DIRN_STOP)
 				new_dir_state_ch <- DIRN_STOP
 				open_door()
-				Delete_orders(delete_order_ch)
+				Delete_orders(delete_order_ch, floor)
 				Driver_set_button_lamp(BUTTON_COMMAND, floor, 0)
 				Driver_set_button_lamp(BUTTON_CALL_DOWN, floor, 0)
 				Driver_set_button_lamp(BUTTON_CALL_UP, floor, 0)

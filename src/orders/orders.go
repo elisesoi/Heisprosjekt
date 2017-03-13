@@ -206,9 +206,8 @@ func Choose_direction(prev_dir, current_direction Driver_motor_dir, current_floo
 	return DIRN_STOP
 }
 
-func Delete_orders(delete_order_ch chan Order_type) {
-	id := GetLocalId()
+func Delete_orders(delete_order_ch chan Order_type, floor int) {
 	var order_to_delete Order_type
-	order_to_delete.Floor = State_matrix[id].Current_floor
+	order_to_delete.Floor = floor
 	delete_order_ch <- order_to_delete
 }
