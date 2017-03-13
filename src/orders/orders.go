@@ -46,7 +46,7 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 
 				Internal_orders[id][new_order.Floor] = 1
 				//bcast til de andre
-			}else if new_order.Button == BUTTON_CALL_UP{
+			} else if new_order.Button == BUTTON_CALL_UP {
 				External_orders[new_order.Floor][1] = EXTERNAL_ORDER
 				//fmt.Println("call up", External_orders)
 				//spør kost hvem som skal ta bestilling
@@ -57,7 +57,7 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 				State_matrix[id] = state
 				External_orders[new_order.Floor][1] = 1
 				//når svar fra alle: legg til i state_matrix og endre External_order til heis som tar bestilling til 1 (istede for 9)
-			}else if new_order.Button == BUTTON_CALL_DOWN{
+			} else if new_order.Button == BUTTON_CALL_DOWN {
 				External_orders[new_order.Floor][0] = EXTERNAL_ORDER
 				//fmt.Println("call down", External_orders)
 				//spør kost hvem som skal ta bestilling
@@ -79,31 +79,31 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 			//External_order[delete_order.Floors][0] = 0
 			//External_order[delete_order.Floors][1] = 0
 
-		case newPeer := <- new_peer_ch:
+		case newPeer := <-new_peer_ch:
 			//legg til newPeer til state_matrix
-			State_matrix[newPeer] = Elevator_states{Floors: []int{0,0,0,0}, Current_direction: DIRN_STOP, Prev_direction: DIRN_STOP, Current_floor: 0, Alive: 1}
+			State_matrix[newPeer] = Elevator_states{Floors: []int{0, 0, 0, 0}, Current_direction: DIRN_STOP, Prev_direction: DIRN_STOP, Current_floor: 0, Alive: 1}
 
 			fmt.Println(State_matrix)
 			//spør den nye heisen om den har bestilliger fra før? etg? oppdater?
 			//legg til newPeer til Internal_orders
 			//if Internal_orders[newPeer] ikke finnes{}
-		
-			// hvis internal orders allerede har en heis med den id-en, så send internal orders til denne heisen. 
-		/*
-		case lostPeer := <- lost_peer_ch:
-			//gi bestillinger fra lostPeer til en annen heis
 
-			for floor := 0; floor<N_FLOORS; floor++{
-				if State_matrix[lostPeer[0]].Floors[floor] == 1{
-					local_id := GetLocalId()
-					State_matrix[local_id].Floors[floor] = 1
-					Internal_orders[local_id][floor] = 1
-					fmt.Println("Heisen som døde ", lostPeer[0]," hadde en bestilling i etg ", floor, "som ble lagt til i heis: ", local_id)
-				}
-			}
-			 
-			delete(State_matrix, lostPeer) //slett lostPeer fra State_matrix
-		*/
+			// hvis internal orders allerede har en heis med den id-en, så send internal orders til denne heisen.
+			/*
+				case lostPeer := <- lost_peer_ch:
+					//gi bestillinger fra lostPeer til en annen heis
+
+					for floor := 0; floor<N_FLOORS; floor++{
+						if State_matrix[lostPeer[0]].Floors[floor] == 1{
+							local_id := GetLocalId()
+							State_matrix[local_id].Floors[floor] = 1
+							Internal_orders[local_id][floor] = 1
+							fmt.Println("Heisen som døde ", lostPeer[0]," hadde en bestilling i etg ", floor, "som ble lagt til i heis: ", local_id)
+						}
+					}
+
+					delete(State_matrix, lostPeer) //slett lostPeer fra State_matrix
+			*/
 		}
 	}
 }
@@ -143,112 +143,68 @@ func choose_elevator(){
 }
 */
 
+func orders_above(current_floor int) int {
+	id := GetLocalId()
+	for i := current_floor; i < N_FLOORS; i++ {
+		if State_matrix[id].Floors[i] == 1 {
+			return 1
+		}
+	}
+	return 0
+}
+
+func orders_under(current_floor int) int {
+	id := GetLocalId()
+	for j := current_floor; j >= 0; j-- {
+		if State_matrix[id].Floors[j] == 1 {
+			return 1
+		}
+	}
+	return 0
+}
+
 func Should_stop(current_floor int) bool {
 	id := GetLocalId()
-	//fmt.Println(id)
-	//fmt.Println("Current floor", current_floor)
-	//fmt.Println("ordre i etg fra matrise: ",State_matrix[id].Floors[current_floor])
 	if State_matrix[id].Floors[current_floor] == 1 {
-		if Internal_orders[id][current_floor] == 1{
+		if Internal_orders[id][current_floor] == 1 {
 			return true
-		} else if External_orders[current_floor][0] == 1 {// && State_matrix[id].Current_direction == -1
-		//må sjekke mot Internal_orders og External_orders
-		//sjekk tallet i matrisen opp mot dir
+		} else if External_orders[current_floor][0] == 1 && State_matrix[id].Current_direction == -1 {
 			return true
-		} else if External_orders[current_floor][1] == 1 {// && State_matrix[id].Current_direction == 1
+		} else if External_orders[current_floor][1] == 1 && State_matrix[id].Current_direction == 1 {
 			return true
 		}
 	}
-	//fmt.Println("Should stop?")
 	return false
 }
 
-func Choose_direction(prev_dir, current_direction Driver_motor_dir, current_floor int, id string) Driver_motor_dir{
-	/*
-	switch prev_dir {
-	case DIRN_UP:
-		for i:=current_floor; i<N_FLOORS; i++{
-			if State_matrix[id].Floors[i] == 1 {
-				fmt.Println("Valgte å kjør opp. Min forrige retning var: ", prev_dir)
-				return DIRN_UP
-			}
-		}
-		for j := current_floor; j>=0; j--{
-			if State_matrix[id].Floors[j] == 1 {
-				fmt.Println("Valgte å kjør ned. Min forrige retning var: ", prev_dir)
-				return DIRN_DOWN
-			}
-		}
-		//return DIRN_STOP
-
-	case DIRN_DOWN: 
-		for j := current_floor; j>=0; j--{
-			if State_matrix[id].Floors[j] == 1 {
-				fmt.Println("Valgte å kjør ned. Min forrige retning var: ", prev_dir)
-				return DIRN_DOWN
-			}
-		}
-		for i:=current_floor; i<N_FLOORS; i++{
-			if State_matrix[id].Floors[i] == 1 {
-				fmt.Println("Valgte å kjør opp. Min forrige retning var: ", prev_dir)
-				return DIRN_UP
-			}
-		}
-		//return DIRN_STOP
-	}*/
-
-	switch current_direction{
+func Choose_direction(prev_dir, current_direction Driver_motor_dir, current_floor int, id string) Driver_motor_dir {
+	switch current_direction {
 	case DIRN_STOP:
 		//fmt.Println("Valgte å stå i ro. Min forrige retning var: ", prev_dir)
-		if prev_dir == 1{
-			for i:=current_floor; i<N_FLOORS; i++{
-				if State_matrix[id].Floors[i] == 1 {
-					fmt.Println("Valgte å kjør opp. Min forrige retning var: ", prev_dir)
-					return DIRN_UP
-				}
-			}
-		}else if prev_dir == -1{
-			for j := current_floor; j>=0; j--{
-				if State_matrix[id].Floors[j] == 1 {
-					fmt.Println("Valgte å kjør ned. Min forrige retning var: ", prev_dir)
-					return DIRN_DOWN
-				}
-			}
-		}else if prev_dir == 0{
-			for i:=current_floor; i<N_FLOORS; i++{
-				if State_matrix[id].Floors[i] == 1 {
-					fmt.Println("Valgte å kjør opp. Min forrige retning var: ", prev_dir)
-					return DIRN_UP
-				}
-			}
-			for j := current_floor; j>=0; j--{
-				if State_matrix[id].Floors[j] == 1 {
-					fmt.Println("Valgte å kjør ned. Min forrige retning var: ", prev_dir)
-					return DIRN_DOWN
-				}
-			}
+		if prev_dir == 1 && orders_above(current_floor) == 1 {
+			return DIRN_UP
+		} else if prev_dir == -1 && orders_under(current_floor) == 1 {
+			return DIRN_DOWN
+		} else if prev_dir == 0 && orders_above(current_floor) == 1 {
+			return DIRN_UP
+		} else if prev_dir == 0 && orders_under(current_floor) == 1 {
+			return DIRN_DOWN
 		}
 	case DIRN_UP:
-		//hvis ingen besitllinger, stop
-		for i:=current_floor; i<N_FLOORS; i++{
-				if State_matrix[id].Floors[i] == 1 {
-					//fmt.Println("Valgte å kjør opp. Min forrige retning var: ", prev_dir)
-					return DIRN_UP
-				}
-			}
-		return DIRN_STOP
-	case DIRN_DOWN:
-		for j := current_floor; j>=0; j--{
-			if State_matrix[id].Floors[j] == 1 {
-				fmt.Println("Valgte å kjør ned. Min forrige retning var: ", prev_dir)
-				return DIRN_DOWN
-			}
+		if orders_above(current_floor) == 1 {
+			return DIRN_UP
+		} else if orders_under(current_floor) == 1 {
+			return DIRN_DOWN
 		}
-		return DIRN_STOP
+	case DIRN_DOWN:
+		if orders_under(current_floor) == 1 {
+			return DIRN_DOWN
+		} else if orders_above(current_floor) == 1 {
+			return DIRN_UP
+		}
 	}
 	return DIRN_STOP
 }
-
 
 func Delete_orders(delete_order_ch chan Order_type) {
 	id := GetLocalId()
@@ -256,16 +212,3 @@ func Delete_orders(delete_order_ch chan Order_type) {
 	order_to_delete.Floor = State_matrix[id].Current_floor
 	delete_order_ch <- order_to_delete
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

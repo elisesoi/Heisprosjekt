@@ -1,20 +1,20 @@
 package elevator
 
 import (
+	"../Network"
 	. "../driver"
 	. "../orders"
 	"fmt"
-	"../Network"
 	//. "../Network/network/localip"
 	"time"
 )
 
-func Initialize_elevator(id string, ) {
+func Initialize_elevator(id string) {
 	Driver_init()
 	fmt.Println("Press STOP button to stop elevator and exit program.")
 	Driver_set_motor_direction(DIRN_STOP)
 
-	State_matrix[id] = Elevator_states{Floors: []int{0,0,0,0}, Current_direction: DIRN_STOP, Prev_direction: DIRN_UP, Current_floor: 0, Alive: 1}
+	State_matrix[id] = Elevator_states{Floors: []int{0, 0, 0, 0}, Current_direction: DIRN_STOP, Prev_direction: DIRN_UP, Current_floor: 0, Alive: 1}
 
 	for floor := 0; floor < N_FLOORS; floor++ {
 		for button_type := 0; button_type < 2; button_type++ {
@@ -56,8 +56,6 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 	state := Elevator_states{}
 
 	for {
-		Driver_set_floor_indicator(Driver_get_floor_sensor_signal())
-
 		select {
 		case stop := <-stop_button_pushed_ch:
 			stop++
@@ -65,49 +63,35 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 			break
 
 		case floor := <-floor_reached_ch: // this file
+			Driver_set_floor_indicator(floor)
 			id := Network.GetLocalId()
 			state.Current_floor = floor
 			order_new_state_ch <- floor
-			//fmt.Println(State_matrix)
-			floor_reached(new_dir_state_ch, delete_order_ch, floor)
+			if Should_stop(floor) == true {
+				Driver_set_motor_direction(DIRN_STOP)
+				new_dir_state_ch <- DIRN_STOP
+				open_door()
+				Delete_orders(delete_order_ch)
+				Driver_set_button_lamp(BUTTON_COMMAND, floor, 0)
+				Driver_set_button_lamp(BUTTON_CALL_DOWN, floor, 0)
+				Driver_set_button_lamp(BUTTON_CALL_UP, floor, 0)
+			}
 			Driver_set_motor_direction(Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id))
 			new_dir_state_ch <- Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id)
 
-			if floor >= N_FLOORS -1 {
+			if floor >= N_FLOORS-1 {
 				new_dir_state_ch <- DIRN_DOWN
-				Driver_set_motor_direction(Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id))
 			} else if floor <= 0 {
 				new_dir_state_ch <- DIRN_UP
-				Driver_set_motor_direction(Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id))
 			}
 		case new_order := <-new_order_ch:
-			//fmt.Println("New order!!", new_order)
-			//id := Network.GetLocalId()
 			Driver_set_button_lamp(new_order.Button, new_order.Floor, 1)
 			//if State_matrix[id].Current_direction == DIRN_STOP{
-				//Driver_set_motor_direction(Choose_direction(State_matrix[id].Current_direction, State_matrix[id].Current_floor, id))
+			//Driver_set_motor_direction(Choose_direction(State_matrix[id].Current_direction, State_matrix[id].Current_floor, id))
 			//}
 			//sender bare beskjed til de andre om at det er kommet bestilling
 
 		}
-	}
-}
-
-func floor_reached(new_dir_state_ch chan Driver_motor_dir, delete_order_ch chan Order_type, current_floor int) {
-	if Should_stop(current_floor) == true {
-		//id := Network.GetLocalId()
-		//prev_dir := State_matrix[id].Prev_direction
-		//current_dir := State_matrix[id].Current_direction
-		//fmt.Println("Previous direction ", prev_dir)
-		Driver_set_motor_direction(DIRN_STOP)
-		new_dir_state_ch <- DIRN_STOP
-		open_door()
-		Delete_orders(delete_order_ch)
-		Driver_set_button_lamp(BUTTON_COMMAND, current_floor, 0)
-		Driver_set_button_lamp(BUTTON_CALL_DOWN, current_floor, 0)
-		Driver_set_button_lamp(BUTTON_CALL_UP, current_floor, 0)
-		//new_dir_state_ch <- Choose_direction(prev_dir, current_dir, current_floor, id)
-		//Driver_set_motor_direction(Choose_direction(prev_dir, current_dir, current_floor, id))
 	}
 }
 
@@ -145,12 +129,12 @@ func check_buttons(new_order_ch chan Order_type) {
 				new_order.Floor = floor
 				new_order.Button = BUTTON_CALL_UP
 				new_order_ch <- new_order
-			} 
+			}
 		}
 	}
 }
 
-func open_door(){
+func open_door() {
 	Driver_set_door_open_lamp(1)
 	time.Sleep(3 * time.Second)
 	Driver_set_door_open_lamp(0)

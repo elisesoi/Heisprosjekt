@@ -1,10 +1,10 @@
 package Network
 
 import (
+	. "../driver"
 	"./network/bcast"
 	"./network/localip"
 	"./network/peers"
-	."../driver"
 	//"flag"
 	"fmt"
 	//"os"
@@ -20,7 +20,7 @@ type HelloMsg struct {
 	//her vil vi sende over en et element i matrisen eller hele matrisen
 }
 
-func GetLocalId() string{
+func GetLocalId() string {
 	localIP, err := localip.LocalIP()
 	if err != nil {
 		return "DISCONNECTED"
@@ -36,7 +36,7 @@ func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string, new_s
 
 	go bcast.Transmitter(16585, helloTx, statesTx, sender_ch)
 	go bcast.Receiver(16585, helloRx, statesRx, recv_ch)
-	
+
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
 	peerUpdateCh := make(chan peers.PeerUpdate)
@@ -51,7 +51,6 @@ func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string, new_s
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.
-	
 
 	// The example message. We just send one of these every second.
 	//go func() {
@@ -79,21 +78,21 @@ func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string, new_s
 				lost_peer_ch <- lost_id
 				//fmt.Println("Vi har mistet kontakt med heis: ", lost_id)
 			}*/
-			
+
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
-			
+
 		case a := <-helloRx:
 			fmt.Printf("Received: %#v\n", a)
 
-		case state_update_tx := <- new_state_ch:
+		case state_update_tx := <-new_state_ch:
 			//skal bcastes til alle på stateUpdateCh
-			fmt.Println("Dette er state_updates sendt til network via new_state_ch ", state_update_tx)
+			//fmt.Println("Dette er state_updates sendt til network via new_state_ch ", state_update_tx)
 			statesTx <- state_update_tx
-		case state_update_rx := <- statesRx:
-			fmt.Println("Har Fått oppdatering fra en annen heis", state_update_rx)
+			/*case state_update_rx := <- statesRx:
+			fmt.Println("Har Fått oppdatering fra en annen heis", state_update_rx) */
 			//send til orders, som oppdaterer mapet til respektive heis
 		}
 	}
