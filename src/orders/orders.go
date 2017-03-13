@@ -72,6 +72,8 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 				Driver_set_button_lamp(new_order.Button, new_order.Floor, 1)
 				//når svar fra alle: legg til i state_matrix og endre External_order til heis som tar bestilling til 1 (istede for 9)
 			}
+			//new_state_ch <- State_matrix[id]
+
 		case delete_order := <-delete_order_ch:
 			state := State_matrix[id]
 			state.Floors[delete_order.Floor] = 0
@@ -80,12 +82,13 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 			Internal_orders[id][delete_order.Floor] = 0
 			External_orders[delete_order.Floor][0] = 0
 			External_orders[delete_order.Floor][1] = 0
+			//new_state_ch <- State_matrix[id]
 
 		case newPeer := <-new_peer_ch:
 			//legg til newPeer til state_matrix
 			State_matrix[newPeer] = Elevator_states{Floors: []int{0, 0, 0, 0}, Current_direction: DIRN_STOP, Prev_direction: DIRN_STOP, Current_floor: 0, Alive: 1}
 
-			fmt.Println(State_matrix)
+			//fmt.Println(State_matrix)
 			//spør den nye heisen om den har bestilliger fra før? etg? oppdater?
 			//legg til newPeer til Internal_orders
 			//if Internal_orders[newPeer] ikke finnes{}
@@ -106,6 +109,8 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 
 					delete(State_matrix, lostPeer) //slett lostPeer fra State_matrix
 			*/
+		case new_state := <-new_state_ch:
+			fmt.Println("Den nye staten sendt på kanal til alle: ", new_state)
 		}
 	}
 }

@@ -94,6 +94,8 @@ func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string, new_s
 			/*case state_update_rx := <- statesRx:
 			fmt.Println("Har Fått oppdatering fra en annen heis", state_update_rx) */
 			//send til orders, som oppdaterer mapet til respektive heis
+		case state_update_rx := <-statesRx:
+			new_state_ch <- state_update_rx
 		}
 	}
 }
