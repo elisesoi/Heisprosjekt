@@ -13,7 +13,7 @@ func Initialize_elevator(id string) {
 	fmt.Println("Press STOP button to stop elevator and exit program.")
 	Driver_set_motor_direction(DIRN_STOP)
 
-	State_matrix[id] = Elevator_states{Floors: []int{0, 0, 0, 0}, Current_direction: DIRN_STOP, Prev_direction: DIRN_UP, Current_floor: 0, Alive: 1}
+	State_matrix[id] = Elevator_states{Id: id, Floors: []int{0, 0, 0, 0}, Current_direction: DIRN_STOP, Prev_direction: DIRN_UP, Current_floor: 0, Alive: 1}
 
 	for floor := 0; floor < N_FLOORS; floor++ {
 		for button_type := 0; button_type < 2; button_type++ {
@@ -40,7 +40,7 @@ func Initialize_elevator(id string) {
 	//spør de andre etter oppdatering. if svar fra de andre: oppdater state_matrix
 	//dette skal network init ta seg av (inni network, før for-løkka)
 
-	fmt.Println("State matrix: ", State_matrix) //for å se om tallene blir satt rett
+	fmt.Println("State matrix: ", State_matrix)
 	fmt.Println("External: ", External_orders)
 	fmt.Println("Internal: ", Internal_orders[id])
 }
@@ -82,10 +82,6 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 				new_dir_state_ch <- DIRN_DOWN
 			} else if floor <= 0 {
 				new_dir_state_ch <- DIRN_UP
-			}
-		case new_order := <-new_order_ch:
-			if State_matrix[id].Floors[new_order.Floor] == 1 {
-				Driver_set_button_lamp(new_order.Button, new_order.Floor, 1)
 			}
 		}
 	}
