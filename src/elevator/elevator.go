@@ -4,7 +4,6 @@ import (
 	. "../driver"
 	. "../orders"
 	"fmt"
-	//. "../Network/network/localip"
 	"time"
 )
 
@@ -13,7 +12,7 @@ func Initialize_elevator(id string) {
 	fmt.Println("Press STOP button to stop elevator and exit program.")
 	Driver_set_motor_direction(DIRN_STOP)
 
-	State_matrix[id] = Elevator_states{Id: id, Floors: []int{0, 0, 0, 0}, Current_direction: DIRN_STOP, Prev_direction: DIRN_UP, Current_floor: 0, Alive: 1}
+	State_matrix[id] = Elevator_states{Id: id, Floors: []Driver_button_type{-1, -1, -1, -1}, Current_direction: DIRN_STOP, Prev_direction: DIRN_UP, Current_floor: 0, Alive: 1}
 
 	for floor := 0; floor < N_FLOORS; floor++ {
 		for button_type := 0; button_type < 2; button_type++ {
@@ -65,7 +64,8 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 			Driver_set_floor_indicator(floor)
 			state.Current_floor = floor
 			order_new_state_ch <- floor
-			if Should_stop(floor) == true {
+			//if floor != -1 {
+			if Should_stop(floor, id) == true {
 				Driver_set_motor_direction(DIRN_STOP)
 				new_dir_state_ch <- DIRN_STOP
 				open_door()
@@ -74,6 +74,7 @@ func Elevator_loop(floor_reached_ch, order_new_state_ch chan int, new_dir_state_
 				Driver_set_button_lamp(BUTTON_CALL_DOWN, floor, 0)
 				Driver_set_button_lamp(BUTTON_CALL_UP, floor, 0)
 			}
+			//}
 			dir := Choose_direction(State_matrix[id].Prev_direction, State_matrix[id].Current_direction, floor, id)
 			Driver_set_motor_direction(dir)
 			new_dir_state_ch <- dir

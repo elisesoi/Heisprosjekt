@@ -29,13 +29,11 @@ func GetLocalId() string {
 }
 
 func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string, lost_peer_ch chan []string, new_state_ch chan Elevator_states) {
-	helloTx := make(chan HelloMsg)
-	helloRx := make(chan HelloMsg)
 	statesTx := make(chan Elevator_states) //kanal som (acc) = accnolage som svarer om en har fått melding
 	statesRx := make(chan Elevator_states)
 
-	go bcast.Transmitter(16585, helloTx, statesTx, sender_ch)
-	go bcast.Receiver(16585, helloRx, statesRx, recv_ch)
+	go bcast.Transmitter(16585, statesTx, sender_ch)
+	go bcast.Receiver(16585, statesRx, recv_ch)
 
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
@@ -54,8 +52,11 @@ func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string, lost_
 		case p := <-peerUpdateCh:
 			if p.New != "" {
 				new_id := p.New
-				new_peer_ch <- new_id //send ny id på kanal
-				fmt.Println("Det er oppdaget en ny heis med id: ", new_id)
+				if new_id != local_id {
+					new_peer_ch <- new_id //send ny id på kanal
+					fmt.Println("Det er oppdaget en ny heis med id: ", new_id)
+				}
+
 			} else if p.Lost[0] != "" {
 				lost_id := p.Lost
 				lost_peer_ch <- lost_id
@@ -66,9 +67,6 @@ func Network(local_id string, sender_ch, recv_ch, new_peer_ch chan string, lost_
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
-
-		case a := <-helloRx:
-			fmt.Printf("Received: %#v\n", a)
 
 		case state_update_tx := <-new_state_ch:
 			//skal bcastes til alle på stateUpdateCh
