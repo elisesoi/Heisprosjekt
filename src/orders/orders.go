@@ -86,17 +86,20 @@ func Order(order_new_state_ch chan int, new_dir_state_ch chan Driver_motor_dir, 
 			// hvis internal orders allerede har en heis med den id-en, så send internal orders til denne heisen.
 
 		case lostPeer := <-lost_peer_ch:
-			//gi bestillinger fra lostPeer til en annen heis
-			for floor := 0; floor < N_FLOORS; floor++ {
-				if State_matrix[lostPeer[0]].Floors[floor] != NO_ORDERS {
-					State_matrix[id].Floors[floor] = BUTTON_COMMAND
-					if State_matrix[lostPeer[0]].Floors[floor] == BUTTON_COMMAND {
-						Internal_orders[id][floor] = 1
+			if lostPeer[0] != id {
+				//gi bestillinger fra lostPeer til en annen heis
+				for floor := 0; floor < N_FLOORS; floor++ {
+					if State_matrix[lostPeer[0]].Floors[floor] != NO_ORDERS {
+						State_matrix[id].Floors[floor] = BUTTON_COMMAND
+						if State_matrix[lostPeer[0]].Floors[floor] == BUTTON_COMMAND {
+							Internal_orders[id][floor] = 1
+						}
+						fmt.Println("Heisen som døde ", lostPeer[0], " hadde en bestilling i etg ", floor, "som ble lagt til i heis: ", id)
 					}
-					fmt.Println("Heisen som døde ", lostPeer[0], " hadde en bestilling i etg ", floor, "som ble lagt til i heis: ", id)
 				}
+				delete(State_matrix, lostPeer[0]) //slett lostPeer fra State_matrix
+
 			}
-			delete(State_matrix, lostPeer[0]) //slett lostPeer fra State_matrix
 
 		case new_state := <-new_state_ch:
 			//fmt.Println("Den nye staten sendt på kanal til alle: ", new_state)
